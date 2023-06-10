@@ -48,19 +48,16 @@ LOAD_EXTRACTLEX_BUILD_ENV = ${LOAD_BUILD_ENV}
 
 ifeq (${shell hostname -d 2>/dev/null},mahti.csc.fi)
   HPC_HOST = mahti
-  include ${REPOHOME}lib/env/mahti.mk
+  include ${MAKEDIR}env/mahti.mk
 else ifeq (${shell hostname},dx6-ibs-p2)
   HPC_HOST = dx6
-  include ${REPOHOME}lib/env/dx6.mk
+  include ${MAKEDIR}env/dx6.mk
 else ifeq (${shell hostname},dx7-nkiel-4gpu)
   HPC_HOST = dx7
-  include ${REPOHOME}lib/env/dx7.mk
-# else ifneq ($(wildcard /wrk/tiedeman/research),)
-#   HPC_HOST = taito
-#   include ${REPOHOME}lib/env/taito.mk
+  include ${MAKEDIR}env/dx7.mk
 else ifeq (${shell hostname --domain 2>/dev/null},bullx)
   HPC_HOST = puhti
-  include ${REPOHOME}lib/env/puhti.mk
+  include ${MAKEDIR}env/puhti.mk
 endif
 
 

@@ -1,18 +1,24 @@
 # -*-makefile-*-
 
-LEADERBOARD ?= OPUS-MT-leaderboard
-METRICS     ?= bleu spbleu chrf chrf++ comet
-
 
 ## set the home directory of the repository
 ## this is to find the included makefiles
 ## (important to have a trailing '/')
 
-SHELL    := bash
+PWD      ?= ${shell pwd}
+REPOHOME ?= ${PWD}/
+MAKEDIR  ?= ${REPOHOME}/build/
 TODAY    := $(shell date +%F)
 
-PWD      ?= ${shell pwd}
-REPOHOME ?= ${PWD}/../
+include ${MAKEDIR}env.mk
+include ${MAKEDIR}slurm.mk
+
+
+## LEADERBOARD specifies the leaderboard category
+## (OPUS-MT-leaderboard, External-MT-leaderboard, Contributed-MT-leaderboard)
+
+LEADERBOARD ?= $(filter %-MT-leaderboard,$(subst /, ,${PWD}))
+METRICS     ?= bleu spbleu chrf chrf++ comet
 
 
 ## work directory (for the temporary models)
@@ -20,10 +26,6 @@ REPOHOME ?= ${PWD}/../
 WORK_HOME ?= ${PWD}/work
 MODEL     ?= $(firstword ${MODELS})
 WORK_DIR  ?= ${WORK_HOME}/${MODEL}
-
-
-include ${REPOHOME}lib/env.mk
-include ${REPOHOME}lib/slurm.mk
 
 
 ## only translate from and to PIVOT (default = English)
@@ -231,6 +233,3 @@ BENCHMARK_SCORE_FILES := $(foreach m,${METRICS},${MODEL_DIR}/${TESTSET}.${LANGPA
 .NOTINTERMEDIATE: ${TRANSLATED_BENCHMARKS} ${EVALUATED_BENCHMARKS} ${BENCHMARK_SCORE_FILES}
 
 
-
-print-makefile-variables:
-	$(foreach var,$(.VARIABLES),$(info $(var) = $($(var))))

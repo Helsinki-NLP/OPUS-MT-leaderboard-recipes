@@ -26,3 +26,7 @@ benchmark-info:
 	@echo "    source: ${TESTSET_SRC}"
 	@echo "trg-labels: ${TESTSET_LABELS}"
 	@echo "references: ${TESTSET_REFS}"
+
+
+print-makefile-variables:
+	$(foreach var,$(.VARIABLES),$(info $(var) = $($(var))))
