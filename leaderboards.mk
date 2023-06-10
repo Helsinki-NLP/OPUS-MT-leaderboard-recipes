@@ -146,17 +146,17 @@ avg-langpair-scores: $(foreach l,${LANGPAIRS},scores/${l}/avg-${METRIC}-scores.t
 ##
 # $(foreach m,${METRICS},scores/%/avg-${m}-scores.txt): scores/%/model-list.txt
 #	@echo "update $@"
-#	@tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
+#	@${MAKEDIR}tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
 
 
 
 scores/${LANGPAIR}/avg-%-scores.txt: scores/${LANGPAIR}/model-list.txt
 	@echo "update $@"
-	@tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
+	@${MAKEDIR}tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
 
 scores/%/avg-${METRIC}-scores.txt: scores/%/model-list.txt
 	@echo "update $@"
-	@tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
+	@${MAKEDIR}tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
 
 
 scores/${LANGPAIR}/top-%-scores.txt: scores/${LANGPAIR}/model-list.txt
