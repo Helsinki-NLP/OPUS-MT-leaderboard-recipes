@@ -8,6 +8,9 @@
 SHELL    := /bin/bash
 PWD      ?= ${shell pwd}
 REPOHOME ?= ${PWD}/
+MAKEDIR  ?= ${REPOHOME}/build/
+TODAY    := $(shell date +%F)
+
 
 # job-specific settings (overwrite if necessary)
 # HPC_EXTRA: additional SBATCH commands
