@@ -45,6 +45,8 @@ else
   TMPDIR := /scratch/${CSCPROJECT}
 endif
 
+TMPWORKDIR := ${shell mktemp -d -p ${TMPDIR}}
+
 
 # CPU_MODULES = gcc/8.3.0 cuda/10.1.168 cudnn/7.6.1.34-10.1 intel-mkl/2019.0.4 python-env 
 # GPU_MODULES = gcc/8.3.0 cuda/10.1.168 cudnn/7.6.1.34-10.1 intel-mkl/2019.0.4 python-env

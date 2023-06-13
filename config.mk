@@ -1,14 +1,9 @@
 # -*-makefile-*-
 
-
-## set the home directory of the repository
-## this is to find the included makefiles
-## (important to have a trailing '/')
-
 PWD      ?= ${shell pwd}
 REPOHOME ?= ${PWD}/
 MAKEDIR  ?= ${REPOHOME}build/
-TODAY    := $(shell date +%F)
+
 
 include ${MAKEDIR}env.mk
 include ${MAKEDIR}slurm.mk

@@ -2,7 +2,7 @@
 
 
 .PHONY: print-model-info
-print-model-info:
+print-model-info: ${MODEL_TESTSETS}
 	@echo "${MODEL_URL}"
 	@echo "${MODEL_DIST}"
 	@echo "${MODEL}"
@@ -17,6 +17,10 @@ print-model-info:
 	@echo ""
 	@echo "missing benchmarks:"
 	@echo "${MISSING_BENCHMARKS}" | tr ' ' "\n"
+
+print-available-testsets:
+	@echo ${TESTSETS}
+
 
 
 .PHONY: eval-pivot
