@@ -7,7 +7,7 @@
 
 PWD      ?= ${shell pwd}
 REPOHOME ?= ${PWD}/
-MAKEDIR  ?= ${REPOHOME}/build/
+MAKEDIR  ?= ${REPOHOME}build/
 TODAY    := $(shell date +%F)
 
 include ${MAKEDIR}env.mk
