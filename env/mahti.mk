@@ -41,6 +41,8 @@ else
   TMPDIR := /scratch/${CSCPROJECT}
 endif
 
+TMPWORKDIR := ${shell mktemp -d -p ${TMPDIR}}
+
 
 ## select queue depending on the number of GPUs allocated
 ifeq (${NR_GPUS},1)
