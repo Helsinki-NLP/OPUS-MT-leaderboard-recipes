@@ -3,7 +3,7 @@
 # recipes for updating and maintaining leaderboard files
 #
 
-
+METRICS ?= bleu spbleu chrf chrf++ comet
 METRIC  ?= $(firstword ${METRICS})
 
 ifdef LANGPAIRDIR

@@ -137,6 +137,11 @@ TESTSET_FILES        := ${OPUSMT_TESTSETS}/testsets.tsv
 LANGPAIR_TO_TESTSETS := ${OPUSMT_TESTSETS}/langpair2benchmark.tsv
 TESTSETS_TO_LANGPAIR := ${OPUSMT_TESTSETS}/benchmark2langpair.tsv
 
+
+ifdef LANGPAIRDIR
+  LANGPAIR = $(lastword $(subst /, ,${LANGPAIRDIR}))
+endif
+
 ALL_LANGPAIRS := $(shell cut -f1 ${LANGPAIR_TO_TESTSETS})
 LANGPAIRS     := ${sort $(filter ${ALL_LANGPAIRS},${MODEL_LANGPAIRS})}
 LANGPAIR      ?= ${firstword ${LANGPAIRS}}
