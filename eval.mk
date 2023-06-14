@@ -170,7 +170,7 @@ ${TRANSLATED_BENCHMARK}: ${SYSTEM_OUTPUT}
 	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
 	fi
 
-${EVALUATED_BENCHMARKS}: ${BENCHMARK_SCORE_FILES}
+${EVALUATED_BENCHMARKS}:
 	${MAKE} $(patsubst %,$(basename $@).%,${METRICS})
 	@for m in ${METRICS}; do \
 	  if [ $$m == comet ]; then \

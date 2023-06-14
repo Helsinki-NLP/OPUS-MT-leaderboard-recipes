@@ -2,7 +2,8 @@
 
 PWD      ?= ${shell pwd}
 REPOHOME ?= ${PWD}/
-MAKEDIR  ?= ${REPOHOME}/build/
+MAKEDIR  ?= ${REPOHOME}build/
+
 
 include ${MAKEDIR}env.mk
 include ${MAKEDIR}slurm.mk

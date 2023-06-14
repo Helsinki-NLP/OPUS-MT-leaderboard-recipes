@@ -8,7 +8,7 @@
 SHELL    := /bin/bash
 PWD      ?= ${shell pwd}
 REPOHOME ?= ${PWD}/
-MAKEDIR  ?= ${REPOHOME}/build/
+MAKEDIR  ?= ${REPOHOME}build/
 TODAY    := $(shell date +%F)
 
 
