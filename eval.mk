@@ -407,6 +407,7 @@ ${MODEL_DIR}:
 
 .PHONY: pack-model-scores
 pack-model-scores: ${MODEL_EVALZIP} ${MODEL_LOGZIP} ${MODEL_DIR}.logfiles
+	find ${MODEL_DIR} -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 
 ${MODEL_EVALZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -name '*.*' | xargs zip $@
@@ -414,7 +415,6 @@ ${MODEL_EVALZIP}: ${MODEL_DIR}
 ${MODEL_LOGZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' |\
 	xargs zip $@
-	find ${MODEL_DIR} -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 
 ${MODEL_DIR}.logfiles: ${MODEL_DIR}
 	find ${MODEL_DIR} -name '*.log' | sed 's|^${MODEL_DIR}/||' > $@
