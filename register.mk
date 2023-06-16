@@ -12,14 +12,17 @@
 ## ...
 ##----------------------------------------------------------------------
 
-ALL_SOURCES := $(filter-out lib,$(notdir ${shell find ${MODEL_HOME} -maxdepth 1 -mindepth 2 -type d}))
 
 ## scores that need to be registered (stored in temporary score files)
 ## if ALL_MODELS is set: check all model directories
 ## if ALL_MODELS is not set: take only the current model dir
 
 ifdef ALL_MODELS
-  SCOREFILES := ${shell find ${MODEL_HOME}/ -name '*-scores.txt'}
+ifdef SOURCE
+  SCOREFILES := ${shell find ${MODEL_HOME}/${SOURCE} -name '*-scores.txt'}
+else
+  SCOREFILES := ${shell find ${MODEL_HOME} -name '*-scores.txt'}
+endif
 else
   SCOREFILES := ${wildcard ${MODEL_DIR}.*-scores.txt}
 endif
@@ -27,26 +30,20 @@ endif
 SCOREFILES_DONE := ${SCOREFILES:.txt=.registered}
 
 
-.PHONY: register-all
-register-all:
-	for s in ${ALL_SOURCES}; do \
-	  ${MAKE} SOURCE=$$s ALL_MODELS=1 register; \
-	done
-
-## register scores from all models in current source in leaderboards
-.PHONY: register-scores
-register-scores:
+.PHONY: register-all register-scores register-model-scores
+register-all register-scores register-model-scores:
 	${MAKE} ALL_MODELS=1 register
+
 
 ## register scores from current model in leaderboards
 .PHONY: register
 register: ${SCOREFILES_DONE}
 ifdef ALL_MODELS
-	find ${MODEL_HOME}/ -name '*.txt' | xargs git add
-	find ${MODEL_HOME}/ -name '*.registered' | xargs git add
-	-find ${MODEL_HOME}/ -name '*.logfiles' | xargs git add
-	-find ${MODEL_HOME}/ -name '*.tsv' | xargs git add
-	-find ${MODEL_HOME}/ -name '*.zip' | grep -v '.eval.zip' | xargs git add
+	find ${MODEL_HOME}/${SOURCE} -name '*.txt' | xargs git add
+	find ${MODEL_HOME}/${SOURCE} -name '*.registered' | xargs git add
+	-find ${MODEL_HOME}/${SOURCE} -name '*.logfiles' | xargs git add
+	-find ${MODEL_HOME}/${SOURCE} -name '*.tsv' | xargs git add
+	-find ${MODEL_HOME}/${SOURCE} -name '*.zip' | grep -v '.eval.zip' | xargs git add
 else
 	git add ${MODEL_DIR}.*.txt
 	git add ${MODEL_DIR}.*.registered
@@ -85,9 +82,7 @@ endif
 SCOREFILES_VALIDATED = $(patsubst %,%.validated,${SCOREFILES})
 
 validate-all-scorefiles:
-	for s in ${ALL_SOURCES}; do \
-	  ${MAKE} SOURCE=$$s ALL_MODELS=1 validate-scorefiles; \
-	done
+	${MAKE} ALL_MODELS=1 validate-scorefiles
 
 validate-scorefiles: ${SCOREFILES_VALIDATED}
 

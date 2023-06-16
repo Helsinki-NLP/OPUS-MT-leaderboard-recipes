@@ -204,6 +204,8 @@ endif
 ## store available benchmarks for this model in a file
 ## --> problem: this will be outdated if new benchmarks appear!
 
+ifdef MODEL
+
 ifeq ($(wildcard ${MODEL_TESTSETS}),)
   MAKE_BENCHMARK_FILE := $(foreach lp,${LANGPAIRS},\
 	$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
@@ -216,11 +218,11 @@ TESTED_BENCHMARKS    := $(sort $(shell cut -f1,2 ${MODEL_SCORES} | tr "\t" '/'))
 MISSING_BENCHMARKS   := $(filter-out ${TESTED_BENCHMARKS},${AVAILABLE_BENCHMARKS})
 
 
-
-
 SYSTEM_INPUT  := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.input
 SYSTEM_OUTPUT := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.output
 TRANSLATED_BENCHMARK := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.compare
+
+endif
 
 
 .INTERMEDIATE: ${SYSTEM_INPUT}
