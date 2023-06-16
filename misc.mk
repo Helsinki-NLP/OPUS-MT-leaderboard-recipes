@@ -57,8 +57,9 @@ create-model-zipfiles: ${MODELZIP_FILES}
 ${MODELZIP_FILES}: %.zip: %.eval.zip
 	mkdir -p $(@:.zip=)
 	cd $(@:.zip=) && unzip -u ../$(notdir $<)
-	cd $(@:.zip=) && find . -type f -not -name '*.compare' -not -name '*.output' | xargs zip ../$(notdir $@)
-	find $(@:.zip=) -type f -not -name '*.compare' -not -name '*.output' -delete
+	cd $(@:.zip=) && find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' | \
+	xargs zip ../$(notdir $@)
+	find $(@:.zip=) -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 	if [ `find $(@:.zip=) -name '*.compare' | wc -l` -gt `find $(@:.zip=) -name '*.output | wc -l` ]; then \
 	  find $(@:.zip=) -name '*.compare' -exec \
 	  sh -c 'i={}; o=$(echo $$i | sed "s/.compare/.output/"); if [ ! -e $$o ]; then sed -n "3~4p" $$i > $$o; fi' \; \

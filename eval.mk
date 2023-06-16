@@ -406,20 +406,19 @@ ${MODEL_DIR}:
 	fi
 
 .PHONY: pack-model-scores
-pack-model-scores:
-	@if [ -d ${MODEL_DIR} ]; then \
-	  echo "... pack model scores from ${MODEL}"; \
-	  cd ${MODEL_DIR} && find . -name '*.*' | xargs zip ${MODEL_EVALZIP}; \
-	  cd ${MODEL_DIR} && find . -type f -not -name '*.compare' -not -name '*.output' | xargs zip ${MODEL_LOGZIP}; \
-	  find ${MODEL_DIR} -name '*.log' | sed 's|^${MODEL_DIR}/||' > ${MODEL_DIR}.logfiles; \
-	  find ${MODEL_DIR} -type f -not -name '*.compare' -not -name '*.output' -delete; \
-	fi
+pack-model-scores: ${MODEL_EVALZIP} ${MODEL_LOGZIP} ${MODEL_DIR}.logfiles
 
+${MODEL_EVALZIP}: ${MODEL_DIR}
+	cd ${MODEL_DIR} && find . -name '*.*' | xargs zip $@
 
+${MODEL_LOGZIP}: ${MODEL_DIR}
+	cd ${MODEL_DIR} && find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' |\
+	xargs zip $@
+	find ${MODEL_DIR} -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 
-## %P is not implemented in all versions of find (e.g. Mac OS)
-##
-#	  find ${MODEL_DIR} -name '*.log' -printf '%P\n' > ${MODEL_DIR}.logfiles; \
+${MODEL_DIR}.logfiles: ${MODEL_DIR}
+	find ${MODEL_DIR} -name '*.log' | sed 's|^${MODEL_DIR}/||' > $@
+
 
 
 MODEL_PACK_EVAL := ${patsubst %,%.pack,${MODELS}}

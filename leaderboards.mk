@@ -240,13 +240,31 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 
 
 %/langpairs.txt: %
-	find $(dir $@) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort > $@
+	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | xargs basename | sort > $@
+
+## printf does not exist on Mac OS
+#	find $(dir $@) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort > $@
 
 
-%/benchmarks.txt: %
-	for b in $(sort $(shell find $(dir $@) -mindepth 2 -maxdepth 2 -type d -printf '%f\n')); do \
+scores/benchmarks.txt: scores
+	rm -f $@
+	find $< -mindepth 2 -maxdepth 2 -type d  | sort > $@.tmp
+	for b in `cut -f3 -d/ $@.tmp | sort -u`; do \
+	  echo "find language pairs for $$b"; \
 	  echo -n "$$b	" >> $@; \
-	  find $(dir $@) -name "$$b" -type d | cut -f2 -d/ | sort -u | tr "\n" ' ' >> $@; \
+	  grep "/$$b$$" $@.tmp | cut -f2 -d/ | sort -u | tr "\n" ' ' >> $@; \
 	  echo "" >> $@; \
 	done
+	rm -f $@.tmp
 
+
+## this is too slow:
+##
+# %/benchmarks.txt: %
+# 	for b in $(sort $(notdir $(shell find $(dir $@) -mindepth 2 -maxdepth 2 -type d))); do \
+# 	  echo "find language pairs for $$b"; \
+# 	  echo -n "$$b	" >> $@; \
+# 	  find $(dir $@) -name "$$b" -type d |  xargs dirname | xargs basename | \
+# 	  sort -u | tr "\n" ' ' >> $@; \
+# 	  echo "" >> $@; \
+# 	done

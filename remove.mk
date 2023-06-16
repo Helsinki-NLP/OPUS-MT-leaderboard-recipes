@@ -246,13 +246,18 @@ DEVSETS := $(sort $(shell cut -f1 ../scores/benchmarks.txt | grep dev | grep -v 
 
 .PHONY: remove-devsets
 remove-devsets:
+	${MAKE} remove-devset-scores
+	${MAKE} remove-devevalfiles
+
+
+.PHONY: remove-devset-scores
+remove-devset-scores:
 	${MAKE} REMOVE_PATTERN='^($(sort $(subst ${SPACE},|,${DEVSETS})))<TAB>' remove-from-topscores
 	${MAKE} REMOVE_PATTERN='<TAB>($(sort $(subst ${SPACE},|,${DEVSETS})))<TAB>' remove-from-modelscores
 	@for d in ${DEVSETS}; do \
 	  echo "delete $$d"; \
 	  find ../scores/ -maxdepth 2 -mindepth 1 -name $$d -exec rm -fr {} \; ; \
 	done
-	${MAKE} remove-devevalfiles
 
 
 ## remove all evaluation files that belong to development sets
