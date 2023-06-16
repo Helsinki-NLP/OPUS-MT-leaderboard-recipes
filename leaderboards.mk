@@ -113,8 +113,10 @@ refresh-leaderboards-find:
 
 
 
-.PHONY: model-list
+.PHONY: model-list model-lists
 model-list: scores/${LANGPAIR}/model-list.txt
+model-lists: $(foreach l,${LANGPAIRS},scores/${l}/model-list.txt)
+
 
 scores/%/model-list.txt:
 	find ${dir $@} -mindepth 2 -name '*-scores.txt' | xargs cut -f2 | sort -u > $@
@@ -169,6 +171,8 @@ scores/${LANGPAIR}/top-%-scores.txt: scores/${LANGPAIR}/model-list.txt
 	    head -1 $$f           >> $@; \
 	  fi \
 	done
+
+.NOTINTERMEDIATE: scores/%/model-list.txt
 
 scores/%/top-${METRIC}-scores.txt: scores/%/model-list.txt
 	@echo "update $@"
