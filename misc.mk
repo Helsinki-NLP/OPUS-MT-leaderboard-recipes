@@ -72,4 +72,9 @@ create-output-files: ${OUTPUT_FILES}
 	sed -n '3~4p' $< > $@
 
 
+EVAL_IN_ZIP_FILES   := $(patsubst %.zip,%.eval-files,${MODELZIP_FILES})
 
+extract-eval-files: ${EVAL_IN_ZIP_FILES}
+
+${EVAL_IN_ZIP_FILES}: %.eval-files: %.zip
+	cd $(@:.eval-files=) && unzip -u ../$(notdir $<) '*.eval'

@@ -132,8 +132,10 @@ ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
 
 
 .PHONY: eval
-eval:	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.compare \
-	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.eval
+eval: ${EVALUATED_BENCHMARK}
+
+#	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.compare \
+#	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.eval
 
 
 EVAL_LANGPAIR_TARGET = $(patsubst %,%-eval,${LANGPAIRS})
@@ -158,9 +160,6 @@ ${EVAL_BENCHMARK_TARGETS}:
 
 
 
-
-
-
 ## compare source. reference and hypothesis
 ## NOTE: this only shows one reference translation
 
@@ -170,7 +169,10 @@ ${TRANSLATED_BENCHMARK}: ${SYSTEM_OUTPUT}
 	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
 	fi
 
-${EVALUATED_BENCHMARKS}:
+.NOTINTERMEDIATE: %.output
+
+${EVALUATED_BENCHMARKS}: %.eval: %.output
+	${MAKE} $(@:.eval=.compare)
 	${MAKE} $(patsubst %,$(basename $@).%,${METRICS})
 	@for m in ${METRICS}; do \
 	  if [ $$m == comet ]; then \
@@ -407,13 +409,14 @@ ${MODEL_DIR}:
 
 .PHONY: pack-model-scores
 pack-model-scores: ${MODEL_EVALZIP} ${MODEL_LOGZIP} ${MODEL_DIR}.logfiles
-	find ${MODEL_DIR} -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
+	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.eval' -delete
 
 ${MODEL_EVALZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -name '*.*' | xargs zip $@
 
 ${MODEL_LOGZIP}: ${MODEL_DIR}
-	cd ${MODEL_DIR} && find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' |\
+	cd ${MODEL_DIR} && \
+	find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' |\
 	xargs zip $@
 
 ${MODEL_DIR}.logfiles: ${MODEL_DIR}
