@@ -406,14 +406,18 @@ ${MODEL_DIR}:
 	fi
 
 .PHONY: pack-model-scores
-pack-model-scores: ${MODEL_EVALZIP} ${MODEL_LOGZIP} ${MODEL_DIR}.logfiles
-	find ${MODEL_DIR} -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
+pack-model-scores: ${MODEL_EVALALLZIP} ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
+	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.eval' -delete
 
-${MODEL_EVALZIP}: ${MODEL_DIR}
+${MODEL_EVALALLZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -name '*.*' | xargs zip $@
 
-${MODEL_LOGZIP}: ${MODEL_DIR}
-	cd ${MODEL_DIR} && find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' |\
+${MODEL_EVALLOGZIP}: ${MODEL_DIR}
+	cd ${MODEL_DIR} && find . -name '*.log' | xargs zip $@
+
+${MODEL_EVALZIP}: ${MODEL_DIR}
+	cd ${MODEL_DIR} && \
+	find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -not -name '*.log' |\
 	xargs zip $@
 
 ${MODEL_DIR}.logfiles: ${MODEL_DIR}

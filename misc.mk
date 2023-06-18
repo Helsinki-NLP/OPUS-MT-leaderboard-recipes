@@ -57,13 +57,16 @@ create-model-zipfiles: ${MODELZIP_FILES}
 ${MODELZIP_FILES}: %.zip: %.eval.zip
 	mkdir -p $(@:.zip=)
 	cd $(@:.zip=) && unzip -u ../$(notdir $<)
-	cd $(@:.zip=) && find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' | \
+	cd $(@:.zip=) && \
+	find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -not -name '*.log' | \
 	xargs zip ../$(notdir $@)
+	find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
 	find $(@:.zip=) -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 	if [ `find $(@:.zip=) -name '*.compare' | wc -l` -gt `find $(@:.zip=) -name '*.output | wc -l` ]; then \
 	  find $(@:.zip=) -name '*.compare' -exec \
-	  sh -c 'i={}; o=$(echo $$i | sed "s/.compare/.output/"); if [ ! -e $$o ]; then sed -n "3~4p" $$i > $$o; fi' \; \
+	  sh -c 'i={}; o=$(echo $$i | sed "s/.compare/.output/"); if [ ! -e $$o ]; then sed -n "3~4p" $$i > $$o; fi' \; ; \
 	fi
+	find $(@:.zip=) -type f -name '*.compare' -delete
 #	${MAKE} MODEL=$(patsubst ../models/%,%,$(@:.zip=)) create-output-files
 
 create-output-files: ${OUTPUT_FILES}

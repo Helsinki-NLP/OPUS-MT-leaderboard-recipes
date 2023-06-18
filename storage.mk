@@ -76,6 +76,8 @@ upload-dryrun upload-eval-files-dryrun:
 .PHONY: download download-eval-files
 download download-eval-files: ${MODEL_EVALZIPS}
 
+download-skip-nllb: $(filter-out huggingface/facebook/m2m%,$(filter-out huggingface/facebook/nllb-%,${MODEL_EVALZIPS}))
+
 .PHONY: download-all
 download-all:
 	${MAKE} ALL_MODELSOURCES=1 download
