@@ -76,3 +76,19 @@ create-output-files: ${OUTPUT_FILES}
 
 
 
+## some more house-keeping
+## - extract eval files from zip files
+## - delete eval files from zip files
+
+EXTRACT_EVAL_IN_ZIP_FILES := $(patsubst %.zip,%.extact-eval-files,${MODELZIP_FILES})
+DELETE_EVAL_IN_ZIP_FILES := $(patsubst %.zip,%.delete-eval-files,${MODELZIP_FILES})
+
+extract-eval-files: ${EXTRACT_EVAL_IN_ZIP_FILES}
+
+${EXTRACT_EVAL_IN_ZIP_FILES}: %.extract-eval-files: %.zip
+	-cd $(@:.extract-eval-files=) && unzip -u ../$(notdir $<) '*.eval'
+
+delete-eval-files: ${DELETE_EVAL_IN_ZIP_FILES}
+
+${DELETE_EVAL_IN_ZIP_FILES}: %.delete-eval-files: %.zip
+	-cd $(@:.delete-eval-files=) && zip -d ../$(notdir $<) '*.eval'
