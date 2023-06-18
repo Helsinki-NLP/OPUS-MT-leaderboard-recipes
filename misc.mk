@@ -63,7 +63,7 @@ ${MODELZIP_FILES}: %.zip: %.eval.zip
 	xargs zip ../$(notdir $@)
 	cd $(@:.zip=) && find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
 	find $(@:.zip=) -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
-	if [ `find $(@:.zip=) -name '*.compare' | wc -l` -gt `find $(@:.zip=) -name '*.output | wc -l` ]; then \
+	if [ `find $(@:.zip=) -name '*.compare' | wc -l` -gt `find $(@:.zip=) -name '*.output' | wc -l` ]; then \
 	  find $(@:.zip=) -name '*.compare' -exec \
 	  sh -c 'i={}; o=$(echo $$i | sed "s/.compare/.output/"); if [ ! -e $$o ]; then sed -n "3~4p" $$i > $$o; fi' \; ; \
 	fi
@@ -74,9 +74,9 @@ ${MODELZIP_FILES}: %.zip: %.eval.zip
 create-eval-log-zipfiles: ${LOGZIP_FILES}
 
 ${LOGZIP_FILES}: %.log.zip: %.eval.zip
-	cd $(@:.zip=) && unzip -u ../$(notdir $<) '*.log'
-	cd $(@:.zip=) && find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
-	find $(@:.zip=) -type f -name '*.log' -delete
+	-cd $(@:.log.zip=) && unzip -u ../$(notdir $<) '*.log'
+	cd $(@:.log.zip=) && find . -type f -name '*.log' | xargs zip ../$(notdir $@)
+	find $(@:.log.zip=) -type f -name '*.log' -delete
 
 
 create-output-files: ${OUTPUT_FILES}
@@ -90,7 +90,7 @@ create-output-files: ${OUTPUT_FILES}
 ## - extract eval files from zip files
 ## - delete eval files from zip files
 
-EXTRACT_EVAL_IN_ZIP_FILES := $(patsubst %.zip,%.extact-eval-files,${MODELZIP_FILES})
+EXTRACT_EVAL_IN_ZIP_FILES := $(patsubst %.zip,%.extract-eval-files,${MODELZIP_FILES})
 DELETE_EVAL_IN_ZIP_FILES := $(patsubst %.zip,%.delete-eval-files,${MODELZIP_FILES})
 
 extract-eval-files: ${EXTRACT_EVAL_IN_ZIP_FILES}
