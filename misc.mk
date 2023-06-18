@@ -44,6 +44,7 @@ print-makefile-variables:
 
 EVALZIP_FILES    := $(shell find ${REPOHOME}models -name '*.eval.zip')
 MODELZIP_FILES   := $(patsubst %.eval.zip,%.zip,${EVALZIP_FILES})
+LOGZIP_FILES     := $(patsubst %.eval.zip,%.log.zip,${EVALZIP_FILES})
 
 ifneq (${MODEL},)
 ifneq ($(wildcard ../models/${MODEL}),)
@@ -60,7 +61,7 @@ ${MODELZIP_FILES}: %.zip: %.eval.zip
 	cd $(@:.zip=) && \
 	find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -not -name '*.log' | \
 	xargs zip ../$(notdir $@)
-	find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
+	cd $(@:.zip=) && find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
 	find $(@:.zip=) -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 	if [ `find $(@:.zip=) -name '*.compare' | wc -l` -gt `find $(@:.zip=) -name '*.output | wc -l` ]; then \
 	  find $(@:.zip=) -name '*.compare' -exec \
@@ -68,6 +69,15 @@ ${MODELZIP_FILES}: %.zip: %.eval.zip
 	fi
 	find $(@:.zip=) -type f -name '*.compare' -delete
 #	${MAKE} MODEL=$(patsubst ../models/%,%,$(@:.zip=)) create-output-files
+
+
+create-eval-log-zipfiles: ${LOGZIP_FILES}
+
+${LOGZIP_FILES}: %.log.zip: %.eval.zip
+	cd $(@:.zip=) && unzip -u ../$(notdir $<) '*.log'
+	cd $(@:.zip=) && find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
+	find $(@:.zip=) -type f -name '*.log' -delete
+
 
 create-output-files: ${OUTPUT_FILES}
 
