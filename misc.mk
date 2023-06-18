@@ -45,6 +45,7 @@ print-makefile-variables:
 EVALZIP_FILES    := $(shell find ${REPOHOME}models -name '*.eval.zip')
 MODELZIP_FILES   := $(patsubst %.eval.zip,%.zip,${EVALZIP_FILES})
 LOGZIP_FILES     := $(patsubst %.eval.zip,%.log.zip,${EVALZIP_FILES})
+EVALZIP_MODELS   := $(patsubst ${REPOHOME}models/%.eval.zip,%,${EVALZIP_FILES})
 
 ifneq (${MODEL},)
 ifneq ($(wildcard ../models/${MODEL}),)
@@ -79,6 +80,11 @@ ${LOGZIP_FILES}: %.log.zip: %.eval.zip
 	find $(@:.log.zip=) -type f -name '*.log' -delete
 
 
+create-all-output-files:
+	for m in ${EVALZIP_MODELS}; do \
+	  make MODEL=$$m create-output-files; \
+	done
+
 create-output-files: ${OUTPUT_FILES}
 
 %.output: %.compare
@@ -102,3 +108,11 @@ delete-eval-files: ${DELETE_EVAL_IN_ZIP_FILES}
 
 ${DELETE_EVAL_IN_ZIP_FILES}: %.delete-eval-files: %.zip
 	-cd $(@:.delete-eval-files=) && zip -d ../$(notdir $<) '*.eval'
+
+
+EXTRACT_COMPARE_FILES := $(patsubst %.zip,%.extract-compare-files,${MODELZIP_FILES})
+
+extract-compare-files: ${EXTRACT_COMPARE_FILES}
+
+${EXTRACT_COMPARE_FILES}: %.extract-compare-files: %.eval.zip
+	-cd $(@:.extract-compare-files=) && unzip -u ../$(notdir $<) '*.compare'
