@@ -182,7 +182,7 @@ REMOVE_PATTERN_UNESCAPED := $(subst <EOS>,$$,$(subst <TAB>,	,${REMOVE_PATTERN}))
 ${SCORE_FILES_REMOVE} ${TOPSCORE_FILES_REMOVE} ${MODELSCORE_FILES_REMOVE}: %.remove: %.txt
 ifneq (${REMOVE_PATTERN_UNESCAPED},)
 	@mv -f $< $@
-	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $@ > $< || exit 1
+	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $@ > $< || exit 0
 	@touch $@
 endif
 
