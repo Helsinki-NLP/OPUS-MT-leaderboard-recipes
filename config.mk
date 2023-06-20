@@ -1,8 +1,8 @@
 # -*-makefile-*-
 
 PWD      ?= ${shell pwd}
-REPOHOME ?= ${PWD}/
-MAKEDIR  ?= ${REPOHOME}build/
+MAKEDIR  := $(dir $(lastword ${MAKEFILE_LIST}))
+REPOHOME ?= $(dir $(lastword ${MAKEFILE_LIST}))../
 
 
 include ${MAKEDIR}env.mk
