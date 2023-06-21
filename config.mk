@@ -89,7 +89,8 @@ TESTSET_INDEX   := ${OPUSMT_TESTSETS}/index.txt
 ## model directory (for test results)
 ## model score file and zipfile with evaluation results
 
-MODEL_HOME       ?= ${PWD}
+SCORE_HOME       ?= ${REPOHOME}scores
+MODEL_HOME       ?= ${REPOHOME}models
 MODEL_DIR        := ${MODEL_HOME}/${MODEL}
 MODEL_EVALZIP    := ${MODEL_DIR}.zip
 MODEL_EVALLOGZIP := ${MODEL_DIR}.log.zip
