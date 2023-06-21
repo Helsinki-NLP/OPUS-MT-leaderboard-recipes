@@ -21,8 +21,13 @@ MODEL_HOME ?= ${REPOHOME}models
 
 
 ##------------------------------------------------------------------
-## if MODEL is set: get language pairs supported by the model
+## if MODEL or MODELNAME is set: get language pairs supported by the model
 ##------------------------------------------------------------------
+
+ifneq (${MODELNAME},)
+  MODELS        := ${MODELNAME}
+  MODEL         := ${MODELNAME}
+endif
 
 ifneq (${MODEL},)
   LANGPAIRS     := $(sort $(shell cut -f1 ${MODEL_HOME}/${MODEL}.scores.txt | sort -u))
