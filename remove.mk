@@ -189,12 +189,14 @@ remove-langpair-benchmark: ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} REMOVE_PATTERN='${LANGPAIR}<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} update-zip-files
 	${MAKE} update-model-lists
+	${MAKE} -C ${REPOHOME} scores/langpairs.txt scores/benchmarks.txt
 
 .PHONY: remove-benchmark
 remove-benchmark: ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} REMOVE_PATTERN='<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} update-zip-files
 	${MAKE} update-model-lists
+	${MAKE} -C ${REPOHOME} scores/langpairs.txt scores/benchmarks.txt
 
 ${SCORE_FILE_DIRS_REMOVE}: %.remove-dir: %
 	mv $< $@
@@ -229,7 +231,6 @@ endif
 
 
 update-model-lists: ${MODELLIST_FILES_UPDATE}
-	${MAKE} -C ${REPOHOME} scores/langpairs.txt scores/benchmarks.txt
 
 ${MODELLIST_FILES_UPDATE}: %.update: %.txt
 	touch $<
