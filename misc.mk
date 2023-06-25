@@ -105,6 +105,7 @@ create-output-files: ${OUTPUT_FILES}
 
 EXTRACT_EVAL_IN_ZIP_FILES := $(patsubst %.zip,%.extract-eval-files,${MODELZIP_FILES})
 DELETE_EVAL_IN_ZIP_FILES := $(patsubst %.zip,%.delete-eval-files,${MODELZIP_FILES})
+DELETE_LOG_IN_ZIP_FILES := $(patsubst %.zip,%.delete-log-files,${MODELZIP_FILES})
 
 extract-eval-files: ${EXTRACT_EVAL_IN_ZIP_FILES}
 
@@ -115,6 +116,11 @@ delete-eval-files: ${DELETE_EVAL_IN_ZIP_FILES}
 
 ${DELETE_EVAL_IN_ZIP_FILES}: %.delete-eval-files: %.zip
 	-cd $(@:.delete-eval-files=) && zip -d ../$(notdir $<) '*.eval'
+
+delete-log-files: ${DELETE_LOG_IN_ZIP_FILES}
+
+${DELETE_LOG_IN_ZIP_FILES}: %.delete-log-files: %.zip
+	-cd $(@:.delete-log-files=) && zip -d ../$(notdir $<) '*.log'
 
 
 EXTRACT_COMPARE_FILES := $(patsubst %.zip,%.extract-compare-files,${MODELZIP_FILES})
