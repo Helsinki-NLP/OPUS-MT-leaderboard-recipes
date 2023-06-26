@@ -200,8 +200,10 @@ remove-benchmark: ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} update-model-lists
 	${MAKE} -C ${REPOHOME} scores/langpairs.txt scores/benchmarks.txt
 
+.PHONY: ${SCORE_FILE_DIRS_REMOVE}
 ${SCORE_FILE_DIRS_REMOVE}: %.remove-dir: %
 	mv $< $@
+	rm -fr $@
 
 
 
@@ -224,16 +226,17 @@ remove-from-model-lists: ${MODELLIST_FILES_REMOVE}
 ## replace special tokens (TAB and end-of-string) with the actual character/regex to be matched
 REMOVE_PATTERN_UNESCAPED := $(subst <EOS>,$$,$(subst <TAB>,	,${REMOVE_PATTERN}))
 
+.PHONY: ${SCORE_FILES_REMOVE} ${MODELLIST_FILES_REMOVE} ${MODELSCORE_FILES_REMOVE}
 ${SCORE_FILES_REMOVE} ${MODELLIST_FILES_REMOVE} ${MODELSCORE_FILES_REMOVE}: %.remove: %.txt
 ifneq (${REMOVE_PATTERN_UNESCAPED},)
-	@mv -f $< $@
-	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $@ > $< || mv -f $@ $<
-	@touch $@
+	cp $< $<.backup
+	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $<.backup > $< || cp $<.backup $<
 endif
 
 
 update-model-lists: ${MODELLIST_FILES_UPDATE}
 
+.PHONY: ${MODELLIST_FILES_UPDATE}
 ${MODELLIST_FILES_UPDATE}: %.update: %.txt
 	touch $<
 	${MAKE} -C ${REPOHOME} LANGPAIR=$(notdir $(patsubst %/,%,$(dir $@))) all-topavg-scores
@@ -248,8 +251,6 @@ ${MODELLIST_FILES_UPDATE}: %.update: %.txt
 
 .PHONY: cleanup
 cleanup:
-	find ${SCORE_HOME} -name '*.remove' -delete
-	find ${MODEL_HOME} -name '*.remove' -delete
 	find ${MODEL_HOME} -name '*.backup' -delete
 	find ${SCORE_HOME} -name '*.txt' -empty -delete
 	find ${MODEL_HOME} -name '*.txt' -empty -delete
