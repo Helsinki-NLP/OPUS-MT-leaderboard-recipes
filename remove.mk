@@ -21,12 +21,14 @@ MODEL_HOME ?= ${REPOHOME}models
 
 
 ##------------------------------------------------------------------
-## if MODEL or MODELNAME is set: get language pairs supported by the model
+## if MODEL or USER/MODELNAME is set: get language pairs supported by the model
 ##------------------------------------------------------------------
 
 ifneq (${MODELNAME},)
-  MODELS        := ${MODELNAME}
-  MODEL         := ${MODELNAME}
+ifneq (${USER},)
+  MODELS        := ${USER}/${MODELNAME}
+  MODEL         := ${USER}/${MODELNAME}
+endif
 endif
 
 ifneq (${MODEL},)
