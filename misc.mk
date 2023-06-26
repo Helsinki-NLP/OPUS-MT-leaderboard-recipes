@@ -59,17 +59,18 @@ create-model-zipfiles: ${MODELZIP_FILES}
 ${MODELZIP_FILES}: %.zip: %.eval.zip
 	mkdir -p $(@:.zip=)
 	cd $(@:.zip=) && unzip -u ../$(notdir $<)
-	cd $(@:.zip=) && \
+	-cd $(@:.zip=) && \
 	find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -not -name '*.log' | \
 	xargs zip ../$(notdir $@)
-	cd $(@:.zip=) && find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
+	-cd $(@:.zip=) && find . -type f -name '*.log' | xargs zip ../$(notdir $(@:.zip=.log.zip))
 	find $(@:.zip=) -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 	if [ `find $(@:.zip=) -name '*.compare' | wc -l` -gt `find $(@:.zip=) -name '*.output' | wc -l` ]; then \
 	  find $(@:.zip=) -name '*.compare' -exec \
 	  sh -c 'i={}; o=$$(echo $$i | sed "s/.compare/.output/"); if [ ! -e $$o ]; then sed -n "3~4p" $$i > $$o; fi' \; ; \
 	fi
-	find $(@:.zip=) -type f -name '*.compare' -delete
 #	${MAKE} MODEL=$(patsubst ../models/%,%,$(@:.zip=)) create-output-files
+	find $(@:.zip=) -type f -name '*.compare' -delete
+
 
 
 create-eval-log-zipfiles: ${LOGZIP_FILES}
@@ -81,12 +82,14 @@ ${LOGZIP_FILES}: %.log.zip: %.eval.zip
 
 
 create-all-output-files:
-	for m in ${EVALZIP_MODELS}; do \
-	  make MODEL=$$m create-output-files; \
-	done
+	find ${MODEL_HOME} -name '*.compare' -exec \
+	  sh -c 'i={}; o=$$(echo $$i | sed "s/.compare/.output/"); if [ ! -e $$o ]; then sed -n "3~4p" $$i > $$o; fi' \;
+#	for m in ${EVALZIP_MODELS}; do \
+#	  make MODEL=$$m create-output-files; \
+#	done
 
 create-nllb-output-files:
-	for m in $(shell find ../models/huggingface/facebook -maxdepth 1 -type d -name 'nllb-200-*'); do \
+	for m in $(shell find ${MODEL_HOME} -maxdepth 3 -type d -name 'nllb-200-*'); do \
 	  find $$m -name '*.compare' -exec \
 	  sh -c 'i={}; o=$$(echo $$i | sed "s/.compare/.output/"); if [ ! -e $$o ]; then sed -n "3~4p" $$i > $$o; fi' \; ; \
 	done
@@ -128,6 +131,7 @@ EXTRACT_COMPARE_FILES := $(patsubst %.zip,%.extract-compare-files,${MODELZIP_FIL
 extract-compare-files: ${EXTRACT_COMPARE_FILES}
 
 ${EXTRACT_COMPARE_FILES}: %.extract-compare-files: %.eval.zip
+	mkdir -p $(@:.extract-compare-files=)
 	-cd $(@:.extract-compare-files=) && unzip -u ../$(notdir $<) '*.compare'
 
 NLLB_MODELZIP_FILES = $(filter ${REPOHOME}models/huggingface/facebook/nllb-%,${MODELZIP_FILES})
