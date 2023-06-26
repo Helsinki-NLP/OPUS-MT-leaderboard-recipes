@@ -115,11 +115,13 @@ MODELLIST_FILES   := $(sort $(foreach langpair,$(LANGPAIRS),$(wildcard ${SCORE_H
 ## backup files before removing benchmarks
 ## also used as targets to actually remove them from the original files
 
-SCORE_FILE_DIRS_REMOVE  := $(patsubst %,%.remove-dir,${SCORE_FILE_DIRS})
-SCORE_FILES_REMOVE      := $(patsubst %.txt,%.remove,${SCORE_FILES})
-MODELSCORE_FILES_REMOVE := $(patsubst %.txt,%.remove,${MODELSCORE_FILES})
-MODELLIST_FILES_REMOVE  := $(patsubst %.txt,%.remove,${MODELLIST_FILES})
-MODELLIST_FILES_UPDATE  := $(patsubst %.txt,%.update,${MODELLIST_FILES})
+SCORE_FILE_DIRS_REMOVE   := $(patsubst %,%.remove-dir,${SCORE_FILE_DIRS})
+SCORE_FILES_REMOVE       := $(patsubst %.txt,%.remove,${SCORE_FILES})
+TRANSLATION_FILES_REMOVE := $(patsubst %.txt,%.remove,${TRANSLATION_FILES})
+EVAL_FILES_REMOVE        := $(patsubst %.txt,%.remove,${EVAL_FILES})
+MODELSCORE_FILES_REMOVE  := $(patsubst %.txt,%.remove,${MODELSCORE_FILES})
+MODELLIST_FILES_REMOVE   := $(patsubst %.txt,%.remove,${MODELLIST_FILES})
+MODELLIST_FILES_UPDATE   := $(patsubst %.txt,%.update,${MODELLIST_FILES})
 
 
 TOPSCORE_FILES_REMOVE   := $(patsubst %.txt,%.remove,${TOPSCORE_FILES})
@@ -175,6 +177,7 @@ remove-langpair-benchmark-from-model:
 	${MAKE} REMOVE_PATTERN='${LANGPAIR}<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} REMOVE_PATTERN='<TAB>${MODEL}<EOS>' remove-from-scores
 	${MAKE} REMOVE_PATTERN='${MODEL}<EOS>' remove-from-model-lists
+	${MAKE} remove-translation-files remove-eval-files
 	${MAKE} update-zip-files
 	${MAKE} update-model-lists
 
@@ -183,12 +186,14 @@ remove-benchmark-from-model:
 	${MAKE} REMOVE_PATTERN='<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} REMOVE_PATTERN='<TAB>${MODEL}<EOS>' remove-from-scores
 	${MAKE} REMOVE_PATTERN='${MODEL}<EOS>' remove-from-model-lists
+	${MAKE} remove-translation-files remove-eval-files
 	${MAKE} update-zip-files
 	${MAKE} update-model-lists
 
 .PHONY: remove-langpair-benchmark
 remove-langpair-benchmark: ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} REMOVE_PATTERN='${LANGPAIR}<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
+	${MAKE} remove-translation-files remove-eval-files
 	${MAKE} update-zip-files
 	${MAKE} update-model-lists
 	${MAKE} -C ${REPOHOME} scores/langpairs.txt scores/benchmarks.txt
@@ -196,6 +201,7 @@ remove-langpair-benchmark: ${SCORE_FILE_DIRS_REMOVE}
 .PHONY: remove-benchmark
 remove-benchmark: ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} REMOVE_PATTERN='<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
+	${MAKE} remove-translation-files remove-eval-files
 	${MAKE} update-zip-files
 	${MAKE} update-model-lists
 	${MAKE} -C ${REPOHOME} scores/langpairs.txt scores/benchmarks.txt
@@ -221,7 +227,8 @@ ${EVALOUT_FILES} ${EVALLOG_FILES} ${EVALALL_FILES}:
 remove-from-scores: ${SCORE_FILES_REMOVE}
 remove-from-model-scores: ${MODELSCORE_FILES_REMOVE}
 remove-from-model-lists: ${MODELLIST_FILES_REMOVE}
-
+remove-translation-files: ${TRANSLATION_FILES_REMOVE}
+remove-eval-files: ${EVAL_FILES_REMOVE}
 
 ## replace special tokens (TAB and end-of-string) with the actual character/regex to be matched
 REMOVE_PATTERN_UNESCAPED := $(subst <EOS>,$$,$(subst <TAB>,	,${REMOVE_PATTERN}))
@@ -232,6 +239,10 @@ ifneq (${REMOVE_PATTERN_UNESCAPED},)
 	cp $< $<.backup
 	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $<.backup > $< || exit 0
 endif
+
+.PHONY: ${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}
+${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}: %.remove: %.txt
+	rm -f $<
 
 
 update-model-lists: ${MODELLIST_FILES_UPDATE}

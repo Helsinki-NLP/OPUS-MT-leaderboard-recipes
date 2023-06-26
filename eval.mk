@@ -392,6 +392,9 @@ fetch: fetch-model fetch-model-scores
 fetch-model-scores: ${MODEL_DIR}/.scores
 
 
+## TODO: can we avoid this?
+##       or at least do it only for the zip in the github repo?
+##
 ## prepare the model evaluation file directory
 ## fetch already existing evaluations
 ${MODEL_DIR}/.scores:
