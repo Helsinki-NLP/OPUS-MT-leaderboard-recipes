@@ -230,7 +230,7 @@ REMOVE_PATTERN_UNESCAPED := $(subst <EOS>,$$,$(subst <TAB>,	,${REMOVE_PATTERN}))
 ${SCORE_FILES_REMOVE} ${MODELLIST_FILES_REMOVE} ${MODELSCORE_FILES_REMOVE}: %.remove: %.txt
 ifneq (${REMOVE_PATTERN_UNESCAPED},)
 	cp $< $<.backup
-	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $<.backup > $< || cp $<.backup $<
+	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $<.backup > $< || exit 0
 endif
 
 
