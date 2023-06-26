@@ -389,13 +389,13 @@ fetch: fetch-model fetch-model-scores
 
 ## fetch existing evaluation files
 .PHONY: fetch-model-scores
-fetch-model-scores: ${MODEL_DIR}
+fetch-model-scores: ${MODEL_DIR}/.scores
 
 
 ## prepare the model evaluation file directory
 ## fetch already existing evaluations
-${MODEL_DIR}:
-	@mkdir -p $@
+${MODEL_DIR}/.scores:
+	@mkdir -p ${MODEL_DIR}
 	-if [ -e ${MODEL_EVALZIP} ]; then \
 	  cd ${MODEL_DIR}; \
 	  unzip -n ${MODEL_EVALZIP}; \
@@ -410,6 +410,7 @@ ${MODEL_DIR}:
 .PHONY: pack-model-scores
 pack-model-scores: ${MODEL_EVALALLZIP} ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
 	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.eval' -delete
+	rm -f ${MODEL_DIR}/.scores
 
 ${MODEL_EVALALLZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -type f | xargs zip $@
