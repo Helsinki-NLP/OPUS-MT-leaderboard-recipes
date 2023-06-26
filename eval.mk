@@ -415,7 +415,7 @@ ${MODEL_EVALALLZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -type f | xargs zip $@
 
 ${MODEL_EVALLOGZIP}: ${MODEL_DIR}
-	cd ${MODEL_DIR} && find . -name '*.log' | xargs zip $@
+	-cd ${MODEL_DIR} && find . -name '*.log' | xargs zip $@
 
 ${MODEL_EVALZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && \
