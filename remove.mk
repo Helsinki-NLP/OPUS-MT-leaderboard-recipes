@@ -115,10 +115,10 @@ MODELLIST_FILES   := $(sort $(foreach langpair,$(LANGPAIRS),$(wildcard ${SCORE_H
 ## backup files before removing benchmarks
 ## also used as targets to actually remove them from the original files
 
+TRANSLATION_FILES_REMOVE := $(patsubst %,%.remove,${TRANSLATION_FILES})
+EVAL_FILES_REMOVE        := $(patsubst %,%.remove,${EVAL_FILES})
 SCORE_FILE_DIRS_REMOVE   := $(patsubst %,%.remove-dir,${SCORE_FILE_DIRS})
 SCORE_FILES_REMOVE       := $(patsubst %.txt,%.remove,${SCORE_FILES})
-TRANSLATION_FILES_REMOVE := $(patsubst %.txt,%.remove,${TRANSLATION_FILES})
-EVAL_FILES_REMOVE        := $(patsubst %.txt,%.remove,${EVAL_FILES})
 MODELSCORE_FILES_REMOVE  := $(patsubst %.txt,%.remove,${MODELSCORE_FILES})
 MODELLIST_FILES_REMOVE   := $(patsubst %.txt,%.remove,${MODELLIST_FILES})
 MODELLIST_FILES_UPDATE   := $(patsubst %.txt,%.update,${MODELLIST_FILES})
@@ -241,7 +241,7 @@ ifneq (${REMOVE_PATTERN_UNESCAPED},)
 endif
 
 .PHONY: ${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}
-${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}: %.remove: %.txt
+${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}: %.remove: %
 	rm -f $<
 
 
