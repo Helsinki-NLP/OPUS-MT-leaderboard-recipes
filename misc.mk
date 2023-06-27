@@ -43,8 +43,10 @@ print-makefile-variables:
 #--------------------
 
 EVALZIP_FILES    := $(shell find ${REPOHOME}models -name '*.eval.zip')
-MODELZIP_FILES   := $(patsubst %.eval.zip,%.zip,${EVALZIP_FILES})
-LOGZIP_FILES     := $(patsubst %.eval.zip,%.log.zip,${EVALZIP_FILES})
+MODELZIP_FILES   := $(filter-out %.eval.zip %.log.zip,$(shell find ${REPOHOME}models -name '*.zip'))
+LOGZIP_FILES     := $(shell find ${REPOHOME}models -name '*.log.zip')
+# MODELZIP_FILES   := $(patsubst %.eval.zip,%.zip,${EVALZIP_FILES})
+# LOGZIP_FILES     := $(patsubst %.eval.zip,%.log.zip,${EVALZIP_FILES})
 EVALZIP_MODELS   := $(patsubst ${REPOHOME}models/%.eval.zip,%,${EVALZIP_FILES})
 
 ifneq (${MODEL},)
@@ -117,13 +119,15 @@ ${EXTRACT_EVAL_IN_ZIP_FILES}: %.extract-eval-files: %.zip
 
 delete-eval-files: ${DELETE_EVAL_IN_ZIP_FILES}
 
-${DELETE_EVAL_IN_ZIP_FILES}: %.delete-eval-files: %.zip
-	-cd $(@:.delete-eval-files=) && zip -d ../$(notdir $<) '*.eval'
+# ${DELETE_EVAL_IN_ZIP_FILES}: %.delete-eval-files: %.zip
+${DELETE_EVAL_IN_ZIP_FILES}:
+	-cd $(@:.delete-eval-files=) && zip -d ../$(notdir $(@:.delete-eval-files=.zip)) '*.eval'
 
 delete-log-files: ${DELETE_LOG_IN_ZIP_FILES}
 
-${DELETE_LOG_IN_ZIP_FILES}: %.delete-log-files: %.zip
-	-cd $(@:.delete-log-files=) && zip -d ../$(notdir $<) '*.log'
+# ${DELETE_LOG_IN_ZIP_FILES}: %.delete-log-files: %.zip
+${DELETE_LOG_IN_ZIP_FILES}:
+	-cd $(@:.delete-log-files=) && zip -d ../$(notdir $(@:.delete-eval-files=.zip)) '*.log'
 
 
 EXTRACT_COMPARE_FILES := $(patsubst %.zip,%.extract-compare-files,${MODELZIP_FILES})

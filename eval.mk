@@ -425,9 +425,13 @@ ${MODEL_EVALZIP}: ${MODEL_DIR}
 	find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -not -name '*.log' |\
 	xargs zip $@
 
-${MODEL_DIR}.logfiles: ${MODEL_DIR}
-	find ${MODEL_DIR} -name '*.log' | sed 's|^${MODEL_DIR}/||' > $@
+# ${MODEL_DIR}.logfiles: ${MODEL_EVALLOGZIP}
+# 	zipinfo -1 $< > $@
+#	find ${MODEL_DIR} -name '*.log' | sed 's|^${MODEL_DIR}/||' > $@
 
+.NOTINTERMIEDIATE: %.log.zip
+%.logfiles: %.log.zip
+	zipinfo -1 $< > $@
 
 
 MODEL_PACK_EVAL := ${patsubst %,%.pack,${MODELS}}
