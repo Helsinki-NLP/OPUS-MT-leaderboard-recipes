@@ -307,9 +307,8 @@ endif
 	  cat $@.bleu-chrf | rev | cut -f1 -d' ' | rev                       > $@.chrf-scores; \
 	  cut -f2 -d= $@.bleu-chrf | cut -f2 -d' '                           > $@.bleu-scores; \
 	  cut -f1 -d: $@.bleu-chrf | sed 's#^.*$$#${MODEL_URL}#'             > $@.urls; \
-	  cut -f1 -d: $@.bleu-chrf | sed 's/$$/.compare/' | \
-	  xargs wc -l |  grep -v '[0-9] total' | \
-	  perl -pe '$$_/=4;print "\n"' | tail -n +2                          > $@.nrlines; \
+	  cut -f1 -d: $@.bleu-chrf | sed 's/$$/.output/' | xargs wc -l |\
+	  grep -v '[0-9] total' | sed 's/^ *//' | cut -f1 -d ' '             > $@.nrlines; \
 	  cut -f1 -d')' $@.bleu-chrf | rev | cut -f1 -d' ' | rev             > $@.nrwords; \
 	  if [ -e $@ ]; then mv $@ $@.old; fi; \
 	  paste $@.langs $@.testsets \
