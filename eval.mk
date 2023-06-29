@@ -336,8 +336,6 @@ endif
 ## (works for all sacrebleu results but not for other metrics)
 ##-------------------------------------------------
 ##
-#
-#	  grep -H . ${MODEL_DIR}/*.$(patsubst ${MODEL_DIR}.%-scores.txt,%,$@) > $@.all;
 
 ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
 	@echo "... create ${MODEL}/$(notdir $@)"
@@ -358,8 +356,6 @@ ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
 
 
 ## specific recipe for COMET scores
-#
-#	  grep -H '^score:' ${MODEL_DIR}/*.comet | sort                  > $@.comet; \
 
 ${MODEL_DIR}.comet-scores.txt: ${MODEL_SCORES}
 	@echo "... create ${MODEL}/$(notdir $@)"
@@ -377,8 +373,6 @@ ${MODEL_DIR}.comet-scores.txt: ${MODEL_SCORES}
 	  mv -f $@.sorted $@; \
 	  rm -f $@.comet $@.langs $@.testsets $@.comet-scores; \
 	fi
-
-
 
 
 
@@ -408,6 +402,7 @@ ${MODEL_DIR}/.scores:
 	  unzip -n eval.zip; \
 	  rm -f eval.zip; \
 	fi
+	@touch $@
 
 .PHONY: pack-model-scores
 pack-model-scores: ${MODEL_EVALALLZIP} ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
