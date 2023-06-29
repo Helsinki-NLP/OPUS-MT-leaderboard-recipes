@@ -244,7 +244,7 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 
 
 %/langpairs.txt: %
-	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | xargs basename | sort > $@
+	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}##' | sort > $@
 
 ## printf does not exist on Mac OS
 #	find $(dir $@) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort > $@
