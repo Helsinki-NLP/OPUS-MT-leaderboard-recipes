@@ -24,7 +24,7 @@ else ifeq (${UPDATED_LEADERBOARDS},1)
   LANGPAIRS  := $(sort $(dir $(patsubst scores/%,%,${SCORE_DIRS})))
   LANGPAIR   ?= $(firstword ${LANGPAIRS})
 else
-  LANGPAIRS  := $(shell find scores -name '*-*' -mindepth 1 -maxdepth 1 -type d | cut -f2 -d/ | sort -u)
+  LANGPAIRS  := $(shell find scores -mindepth 1 -maxdepth 1 -name '*-*' -type d | cut -f2 -d/ | sort -u)
   LANGPAIR   := $(firstword ${LANGPAIRS})
   SCORE_DIRS := $(shell find scores/${LANGPAIR} -mindepth 2 -name '*.unsorted.txt' | cut -f1-3 -d/ | sort -u)
 endif
