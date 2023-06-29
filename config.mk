@@ -1,8 +1,8 @@
 # -*-makefile-*-
 
 PWD      ?= ${shell pwd}
-REPOHOME ?= ${PWD}/
-MAKEDIR  ?= ${REPOHOME}build/
+MAKEDIR  := $(dir $(lastword ${MAKEFILE_LIST}))
+REPOHOME ?= $(dir $(lastword ${MAKEFILE_LIST}))../
 
 
 include ${MAKEDIR}env.mk
@@ -89,11 +89,13 @@ TESTSET_INDEX   := ${OPUSMT_TESTSETS}/index.txt
 ## model directory (for test results)
 ## model score file and zipfile with evaluation results
 
-MODEL_HOME      ?= ${PWD}
-MODEL_DIR       := ${MODEL_HOME}/${MODEL}
-MODEL_LOGZIP    := ${MODEL_DIR}.zip
-MODEL_EVALZIP   := ${MODEL_DIR}.eval.zip
-MODEL_TESTSETS  := ${MODEL_DIR}.testsets.tsv
+SCORE_HOME       ?= ${REPOHOME}scores
+MODEL_HOME       ?= ${REPOHOME}models
+MODEL_DIR        := ${MODEL_HOME}/${MODEL}
+MODEL_EVALZIP    := ${MODEL_DIR}.zip
+MODEL_EVALLOGZIP := ${MODEL_DIR}.log.zip
+MODEL_EVALALLZIP := ${MODEL_DIR}.eval.zip
+MODEL_TESTSETS   := ${MODEL_DIR}.testsets.tsv
 
 LEADERBOARD_DIR = ${REPOHOME}scores
 
@@ -206,21 +208,24 @@ endif
 
 ifdef MODEL
 
+ifneq ($(wildcard $(dir ${MODEL_DIR})),)
 ifeq ($(wildcard ${MODEL_TESTSETS}),)
   MAKE_BENCHMARK_FILE := $(foreach lp,${LANGPAIRS},\
 	$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 		cut -f2 | tr ' ' "\n" | \
 		sed 's|^|${lp}/|' >> ${MODEL_TESTSETS}))
 endif
+endif
 
-AVAILABLE_BENCHMARKS := $(shell cut -f1 ${MODEL_TESTSETS})
-TESTED_BENCHMARKS    := $(sort $(shell cut -f1,2 ${MODEL_SCORES} | tr "\t" '/'))
+AVAILABLE_BENCHMARKS := $(sort $(shell if [ -e ${MODEL_TESTSETS} ]; then cut -f1 ${MODEL_TESTSETS}; fi))
+TESTED_BENCHMARKS    := $(sort $(shell if [ -e ${MODEL_SCORES} ]; then cut -f1,2 ${MODEL_SCORES} | tr "\t" '/'; fi))
 MISSING_BENCHMARKS   := $(filter-out ${TESTED_BENCHMARKS},${AVAILABLE_BENCHMARKS})
 
 
-SYSTEM_INPUT  := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.input
-SYSTEM_OUTPUT := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.output
+SYSTEM_INPUT         := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.input
+SYSTEM_OUTPUT        := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.output
 TRANSLATED_BENCHMARK := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.compare
+EVALUATED_BENCHMARK  := ${MODEL_DIR}/${TESTSET}.${LANGPAIR}.eval
 
 endif
 

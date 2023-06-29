@@ -132,8 +132,10 @@ ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
 
 
 .PHONY: eval
-eval:	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.compare \
-	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.eval
+eval: ${EVALUATED_BENCHMARK}
+
+#	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.compare \
+#	${MODEL_DIR}/${TESTSET}.${LANGPAIR}.eval
 
 
 EVAL_LANGPAIR_TARGET = $(patsubst %,%-eval,${LANGPAIRS})
@@ -158,9 +160,6 @@ ${EVAL_BENCHMARK_TARGETS}:
 
 
 
-
-
-
 ## compare source. reference and hypothesis
 ## NOTE: this only shows one reference translation
 
@@ -170,7 +169,10 @@ ${TRANSLATED_BENCHMARK}: ${SYSTEM_OUTPUT}
 	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
 	fi
 
-${EVALUATED_BENCHMARKS}:
+.NOTINTERMEDIATE: %.output
+
+${EVALUATED_BENCHMARKS}: %.eval: %.output
+	${MAKE} $(@:.eval=.compare)
 	${MAKE} $(patsubst %,$(basename $@).%,${METRICS})
 	@for m in ${METRICS}; do \
 	  if [ $$m == comet ]; then \
@@ -305,9 +307,8 @@ endif
 	  cat $@.bleu-chrf | rev | cut -f1 -d' ' | rev                       > $@.chrf-scores; \
 	  cut -f2 -d= $@.bleu-chrf | cut -f2 -d' '                           > $@.bleu-scores; \
 	  cut -f1 -d: $@.bleu-chrf | sed 's#^.*$$#${MODEL_URL}#'             > $@.urls; \
-	  cut -f1 -d: $@.bleu-chrf | sed 's/$$/.compare/' | \
-	  xargs wc -l |  grep -v '[0-9] total' | \
-	  perl -pe '$$_/=4;print "\n"' | tail -n +2                          > $@.nrlines; \
+	  cut -f1 -d: $@.bleu-chrf | sed 's/$$/.output/' | xargs wc -l |\
+	  grep -v '[0-9] total' | sed 's/^ *//' | cut -f1 -d ' '             > $@.nrlines; \
 	  cut -f1 -d')' $@.bleu-chrf | rev | cut -f1 -d' ' | rev             > $@.nrwords; \
 	  if [ -e $@ ]; then mv $@ $@.old; fi; \
 	  paste $@.langs $@.testsets \
@@ -387,13 +388,16 @@ fetch: fetch-model fetch-model-scores
 
 ## fetch existing evaluation files
 .PHONY: fetch-model-scores
-fetch-model-scores: ${MODEL_DIR}
+fetch-model-scores: ${MODEL_DIR}/.scores
 
 
+## TODO: can we avoid this?
+##       or at least do it only for the zip in the github repo?
+##
 ## prepare the model evaluation file directory
 ## fetch already existing evaluations
-${MODEL_DIR}:
-	@mkdir -p $@
+${MODEL_DIR}/.scores:
+	@mkdir -p ${MODEL_DIR}
 	-if [ -e ${MODEL_EVALZIP} ]; then \
 	  cd ${MODEL_DIR}; \
 	  unzip -n ${MODEL_EVALZIP}; \
@@ -406,19 +410,28 @@ ${MODEL_DIR}:
 	fi
 
 .PHONY: pack-model-scores
-pack-model-scores: ${MODEL_EVALZIP} ${MODEL_LOGZIP} ${MODEL_DIR}.logfiles
-	find ${MODEL_DIR} -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
+pack-model-scores: ${MODEL_EVALALLZIP} ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
+	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.eval' -delete
+	rm -f ${MODEL_DIR}/.scores
+
+${MODEL_EVALALLZIP}: ${MODEL_DIR}
+	cd ${MODEL_DIR} && find . -type f | xargs zip $@
+
+${MODEL_EVALLOGZIP}: ${MODEL_DIR}
+	-cd ${MODEL_DIR} && find . -name '*.log' | xargs zip $@
 
 ${MODEL_EVALZIP}: ${MODEL_DIR}
-	cd ${MODEL_DIR} && find . -name '*.*' | xargs zip $@
-
-${MODEL_LOGZIP}: ${MODEL_DIR}
-	cd ${MODEL_DIR} && find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' |\
+	cd ${MODEL_DIR} && \
+	find . -type f -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -not -name '*.log' |\
 	xargs zip $@
 
-${MODEL_DIR}.logfiles: ${MODEL_DIR}
-	find ${MODEL_DIR} -name '*.log' | sed 's|^${MODEL_DIR}/||' > $@
+# ${MODEL_DIR}.logfiles: ${MODEL_EVALLOGZIP}
+# 	zipinfo -1 $< > $@
+#	find ${MODEL_DIR} -name '*.log' | sed 's|^${MODEL_DIR}/||' > $@
 
+.NOTINTERMIEDIATE: %.log.zip
+%.logfiles: %.log.zip
+	zipinfo -1 $< > $@
 
 
 MODEL_PACK_EVAL := ${patsubst %,%.pack,${MODELS}}

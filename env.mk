@@ -7,8 +7,8 @@
 
 SHELL    := /bin/bash
 PWD      ?= ${shell pwd}
-REPOHOME ?= ${PWD}/
-MAKEDIR  ?= ${REPOHOME}build/
+MAKEDIR  := $(dir $(lastword ${MAKEFILE_LIST}))
+REPOHOME ?= $(dir $(lastword ${MAKEFILE_LIST}))../
 TODAY    := $(shell date +%F)
 
 
