@@ -129,6 +129,7 @@ ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
 			cut -f2 | tr ' ' "\n" | \
 			sed 's|^|${lp}/|' >> $@))
 	@echo "available testsets stored in $@"
+	-git add $@
 
 
 
@@ -409,6 +410,7 @@ ${MODEL_DIR}/.scores:
 pack-model-scores: ${MODEL_EVALALLZIP} ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
 	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.eval' -delete
 	rm -f ${MODEL_DIR}/.scores
+	-git add ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
 
 ${MODEL_EVALALLZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -type f | xargs zip $@

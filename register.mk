@@ -38,19 +38,6 @@ register-all register-scores register-model-scores:
 ## register scores from current model in leaderboards
 .PHONY: register
 register: ${SCOREFILES_DONE}
-ifdef ALL_MODELS
-	find ${MODEL_HOME}/${SOURCE} -name '*.txt' | xargs git add
-	find ${MODEL_HOME}/${SOURCE} -name '*.registered' | xargs git add
-	-find ${MODEL_HOME}/${SOURCE} -name '*.logfiles' | xargs git add
-	-find ${MODEL_HOME}/${SOURCE} -name '*.tsv' | xargs git add
-	-find ${MODEL_HOME}/${SOURCE} -name '*.zip' | grep -v '.eval.zip' | xargs git add
-else
-	git add ${MODEL_DIR}.*.txt
-	git add ${MODEL_DIR}.*.registered
-	-git add ${MODEL_DIR}.logfiles
-	-git add ${MODEL_DIR}.tsv
-	-git add ${MODEL_DIR}.zip ${MODEL_DIR}.log.zip
-endif
 
 
 ifeq (${LEADERBOARD},OPUS-MT-leaderboard)
@@ -63,6 +50,7 @@ ${MODEL_HOME}/%-scores.registered: ${MODEL_HOME}/%-scores.txt
 	@echo "register scores from ${patsubst ${MODEL_HOME}/%,%,$<}"
 	@cat $< | perl -e 'while (<>){ chomp; @a=split(/\t/); $$a[1]=~s/^(news.*)\-[a-z]{4}/$$1/; system "mkdir -p ${LEADERBOARD_DIR}/$$a[0]/$$a[1]"; open C,">>${LEADERBOARD_DIR}/$$a[0]/$$a[1]/$(patsubst .%,%,$(suffix $(basename $<))).$(subst /,.,${patsubst ${MODEL_HOME}/%,%,$<}).unsorted.txt"; $$m="$(shell cut -f5 $(basename $(basename $<)).scores.txt | head -1)";if ($$a[2] && $$m){print C "$$a[2]\t$$m\n";} close C; }'
 	@touch $@
+	@git add $< $@
 
 else
 
@@ -74,6 +62,7 @@ ${MODEL_HOME}/%-scores.registered: ${MODEL_HOME}/%-scores.txt
 	@echo "register scores from ${patsubst ${MODEL_HOME}/%,%,$<}"
 	@cat $< | perl -e 'while (<>){ chomp; @a=split(/\t/); $$a[1]=~s/^(news.*)\-[a-z]{4}/$$1/; system "mkdir -p ${LEADERBOARD_DIR}/$$a[0]/$$a[1]"; open C,">>${LEADERBOARD_DIR}/$$a[0]/$$a[1]/$(patsubst .%,%,$(suffix $(basename $<))).$(subst /,.,${patsubst ${MODEL_HOME}/%,%,$<}).unsorted.txt"; $$m="$(basename $(basename $(patsubst ${MODEL_HOME}/%,%,$<)))";if ($$a[2] && $$m){print C "$$a[2]\t$$m\n";} close C; }'
 	@touch $@
+	@git add $< $@
 
 endif
 
