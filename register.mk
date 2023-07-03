@@ -49,7 +49,7 @@ else
 	git add ${MODEL_DIR}.*.registered
 	-git add ${MODEL_DIR}.logfiles
 	-git add ${MODEL_DIR}.tsv
-	-git add ${MODEL_DIR}.zip
+	-git add ${MODEL_DIR}.zip ${MODEL_DIR}.log.zip
 endif
 
 

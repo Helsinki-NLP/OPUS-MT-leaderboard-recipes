@@ -3,6 +3,7 @@
 
 .PHONY: print-model-info
 print-model-info: ${MODEL_TESTSETS}
+	@echo ${MODEL_TESTSETS}
 	@echo "${MODEL_URL}"
 	@echo "${MODEL_DIST}"
 	@echo "${MODEL}"
