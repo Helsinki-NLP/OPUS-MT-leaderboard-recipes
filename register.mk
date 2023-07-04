@@ -70,10 +70,10 @@ endif
 
 SCOREFILES_VALIDATED = $(patsubst %,%.validated,${SCOREFILES})
 
-validate-all-scorefiles:
-	${MAKE} ALL_MODELS=1 validate-scorefiles
+validate-all-model-scorefiles:
+	${MAKE} ALL_MODELS=1 validate-model-scorefiles
 
-validate-scorefiles: ${SCOREFILES_VALIDATED}
+validate-model-scorefiles: ${SCOREFILES_VALIDATED}
 
 ${SCOREFILES_VALIDATED}: %.validated: %
 	@if [ `sort -u $< | wc -l` != `cat $< | wc -l` ]; then \
@@ -82,4 +82,3 @@ ${SCOREFILES_VALIDATED}: %.validated: %
 	  sort -u $@ > $<; \
 	fi
 	@touch $@
-
