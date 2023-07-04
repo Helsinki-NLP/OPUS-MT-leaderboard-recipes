@@ -216,7 +216,7 @@ ${SCORE_FILE_DIRS_REMOVE}: %.remove-dir: %
 ## remove files from zip archives
 
 .PHONY: update-zip-files
-update-zip-files: ${EVALOUT_FILES} ${EVALLOG_FILES} ${EVALALL_FILES}
+update-zip-files: # ${EVALOUT_FILES} ${EVALLOG_FILES} ${EVALALL_FILES}
 
 ${EVALOUT_FILES} ${EVALLOG_FILES} ${EVALALL_FILES}:
 	-zip -d $(patsubst %/,%,$(dir $@)) $(notdir $@)

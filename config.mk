@@ -146,7 +146,7 @@ ifdef LANGPAIRDIR
 endif
 
 ALL_LANGPAIRS := $(shell cut -f1 ${LANGPAIR_TO_TESTSETS})
-LANGPAIRS     := ${sort $(filter ${ALL_LANGPAIRS},${MODEL_LANGPAIRS})}
+LANGPAIRS     ?= ${sort $(filter ${ALL_LANGPAIRS},${MODEL_LANGPAIRS})}
 LANGPAIR      ?= ${firstword ${LANGPAIRS}}
 LANGPAIRSTR   := ${LANGPAIR}
 SRC           := ${firstword ${subst -, ,${LANGPAIR}}}
@@ -206,7 +206,8 @@ endif
 ## store available benchmarks for this model in a file
 ## --> problem: this will be outdated if new benchmarks appear!
 
-ifdef MODEL
+
+ifneq (${MODEL},)
 
 ifneq ($(wildcard $(dir ${MODEL_DIR})),)
 ifeq ($(wildcard ${MODEL_TESTSETS}),)

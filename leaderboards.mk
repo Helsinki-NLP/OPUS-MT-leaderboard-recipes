@@ -2,6 +2,7 @@
 #
 # recipes for updating and maintaining leaderboard files
 #
+#
 
 METRICS ?= bleu spbleu chrf chrf++ comet
 METRIC  ?= $(firstword ${METRICS})
@@ -119,12 +120,13 @@ model-lists: $(foreach l,${LANGPAIRS},scores/${l}/model-list.txt)
 
 
 scores/%/model-list.txt:
-	find ${dir $@} -mindepth 2 -name '*-scores.txt' | xargs cut -f2 | sort -u > $@
-	@git add $@
+	find ${dir $@} -mindepth 2 -name '*-scores.txt' | \
+	xargs cut -f2 | sed 's|https*://[^/]*/||' | sort -u > $@
+#	@git add $@
 
 released-models.txt: scores
 	find scores -name 'bleu-scores.txt' | xargs cat | cut -f2 | sort -u > $@
-	@git add $@
+#	@git add $@
 
 release-history.txt: released-models.txt
 	cat $< | rev | cut -f3 -d'/' | rev > $@.pkg
@@ -133,7 +135,7 @@ release-history.txt: released-models.txt
 	cat $< | sed 's/^.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)\.zip$$/\1/' > $@.date
 	paste $@.date $@.pkg $@.langpair $@.model | sort -r | sed 's/\.zip$$//' > $@
 	rm -f $@.langpair $@.model $@.date $@.pkg
-	@git add $@
+#	@git add $@
 
 .PHONY: top-score-file top-scores
 top-score-file: scores/${LANGPAIR}/top-${METRIC}-scores.txt
@@ -166,12 +168,12 @@ avg-langpair-scores: $(foreach l,${LANGPAIRS},scores/${l}/avg-${METRIC}-scores.t
 scores/${LANGPAIR}/avg-%-scores.txt: scores/${LANGPAIR}/model-list.txt
 	@echo "update $@"
 	@${MAKEDIR}tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
-	@git add $@
+#	@git add $@
 
 scores/%/avg-${METRIC}-scores.txt: scores/%/model-list.txt
 	@echo "update $@"
 	@${MAKEDIR}tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
-	@git add $@
+#	@git add $@
 
 
 scores/${LANGPAIR}/top-%-scores.txt: scores/${LANGPAIR}/model-list.txt
@@ -184,7 +186,7 @@ scores/${LANGPAIR}/top-%-scores.txt: scores/${LANGPAIR}/model-list.txt
 	    head -1 $$f           >> $@; \
 	  fi \
 	done
-	@git add $@
+#	@git add $@
 
 .NOTINTERMEDIATE: scores/%/model-list.txt
 
@@ -198,7 +200,7 @@ scores/%/top-${METRIC}-scores.txt: scores/%/model-list.txt
 	    head -1 $$f           >> $@; \
 	  fi \
 	done
-	@git add $@
+#	@git add $@
 
 
 ${LEADERBOARDS}: ${SCORE_DIRS}
@@ -226,7 +228,7 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 	    rm -f $(dir $<)model-list.txt; \
 	  fi; \
 	fi
-	@git add $@
+#	@git add $@
 
 scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	@echo "update $@"
@@ -253,7 +255,7 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	    rm -f $(dir $<)model-list.txt; \
 	  fi; \
 	fi
-	@git add $@
+#	@git add $@
 
 
 
@@ -261,7 +263,7 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 
 %/langpairs.txt: %
 	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}##' | sort > $@
-	@git add $@
+#	@git add $@
 
 ## printf does not exist on Mac OS
 #	find $(dir $@) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort > $@
@@ -277,7 +279,7 @@ scores/benchmarks.txt: scores
 	  echo "" >> $@; \
 	done
 	rm -f $@.tmp
-	@git add $@
+#	@git add $@
 
 ## this is too slow:
 ##
