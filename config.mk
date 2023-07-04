@@ -14,7 +14,7 @@ include ${MAKEDIR}slurm.mk
 
 LEADERBOARD ?= $(filter %-MT-leaderboard,$(subst /, ,${PWD}))
 METRICS     ?= bleu spbleu chrf chrf++ comet
-
+METRIC      ?= $(firstword ${METRICS})
 
 ## work directory (for the temporary models)
 
@@ -114,6 +114,7 @@ MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(notdir ${MODEL_HOME})
 ##   - all score files (MODEL_EVAL_SCORES)
 
 MODEL_SCORES        := ${MODEL_DIR}.scores.txt
+MODEL_METRIC_SCORE  := ${MODEL_DIR}.${METRIC}-scores.txt
 MODEL_METRIC_SCORES := $(patsubst %,${MODEL_DIR}.%-scores.txt,${METRICS})
 MODEL_EVAL_SCORES   := ${MODEL_SCORES} ${MODEL_METRIC_SCORES}
 
@@ -219,7 +220,7 @@ endif
 endif
 
 AVAILABLE_BENCHMARKS := $(sort $(shell if [ -e ${MODEL_TESTSETS} ]; then cut -f1 ${MODEL_TESTSETS}; fi))
-TESTED_BENCHMARKS    := $(sort $(shell if [ -e ${MODEL_SCORES} ]; then cut -f1,2 ${MODEL_SCORES} | tr "\t" '/'; fi))
+TESTED_BENCHMARKS    := $(sort $(shell if [ -e ${MODEL_METRIC_SCORE} ]; then cut -f1,2 ${MODEL_METRIC_SCORE} | tr "\t" '/'; fi))
 MISSING_BENCHMARKS   := $(filter-out ${TESTED_BENCHMARKS},${AVAILABLE_BENCHMARKS})
 
 

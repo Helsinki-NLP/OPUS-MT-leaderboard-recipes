@@ -212,7 +212,7 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 	    cat $(wildcard ${@:.txt=}*.unsorted.txt) | \
 	    grep '^[0-9\-]' | sort -k2,2 -k1,1nr            > $@.new.txt; \
 	    sort -m $@.new.txt $@.old.txt |\
-	    uniq -f1 | sort -k1,1nr -u                      > $@.sorted; \
+	    uniq -f1 | sort -k1,1nr | uniq                  > $@.sorted; \
 	    rm -f $@.old.txt $@.new.txt; \
 	    rm -f $(wildcard ${@:.txt=}*.unsorted.txt); \
 	    mv $@.sorted $@; \
@@ -220,9 +220,9 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 	  fi; \
 	else \
 	  if [ $(words $(wildcard ${@:.txt=}*.txt)) -gt 0 ]; then \
-	    echo "merge and sort ${patsubst scores/%,%,$@}"; \
+	    echo "sort ${patsubst scores/%,%,$@}"; \
 	    cat $(wildcard ${@:.txt=}*.txt) | grep '^[0-9\-]' |\
-	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr -u > $@.sorted; \
+	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr | uniq > $@.sorted; \
 	    rm -f $(wildcard ${@:.txt=}*.txt); \
 	    mv $@.sorted $@; \
 	    rm -f $(dir $<)model-list.txt; \
@@ -232,14 +232,14 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 
 scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	@echo "update $@"
-	@if [ -e $@ ]; then \
+	if [ -e $@ ]; then \
 	  if [ $(words $(wildcard ${@:.txt=}*.unsorted.txt)) -gt 0 ]; then \
 	    echo "merge and sort ${patsubst scores/%,%,$@}"; \
 	    sort -k2,2 -k1,1nr $@                           > $@.old.txt; \
 	    cat $(wildcard ${@:.txt=}*.unsorted.txt) | \
 	    grep '^[0-9\-]' | sort -k2,2 -k1,1nr            > $@.new.txt; \
 	    sort -m $@.new.txt $@.old.txt |\
-	    uniq -f1 | sort -k1,1nr -u                      > $@.sorted; \
+	    uniq -f1 | sort -k1,1nr | uniq                  > $@.sorted; \
 	    rm -f $@.old.txt $@.new.txt; \
 	    rm -f $(wildcard ${@:.txt=}*.unsorted.txt); \
 	    mv $@.sorted $@; \
@@ -247,9 +247,9 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	  fi; \
 	else \
 	  if [ $(words $(wildcard ${@:.txt=}*.txt)) -gt 0 ]; then \
-	    echo "merge and sort ${patsubst scores/%,%,$@}"; \
+	    echo "sort ${patsubst scores/%,%,$@}"; \
 	    cat $(wildcard ${@:.txt=}*.txt) | grep '^[0-9\-]' |\
-	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr -u > $@.sorted; \
+	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr | uniq > $@.sorted; \
 	    rm -f $(wildcard ${@:.txt=}*.txt); \
 	    mv $@.sorted $@; \
 	    rm -f $(dir $<)model-list.txt; \
