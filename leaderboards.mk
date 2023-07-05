@@ -4,6 +4,7 @@
 #
 #
 
+
 METRICS ?= bleu spbleu chrf chrf++ comet
 METRIC  ?= $(firstword ${METRICS})
 
@@ -11,6 +12,8 @@ ifdef LANGPAIRDIR
   LANGPAIR := $(lastword $(subst /, ,${LANGPAIRDIR}))
 endif
 
+
+MAKEDIR  := $(dir $(lastword ${MAKEFILE_LIST}))
 
 ## SCORE_DIRS   = directories that contains new scores
 ## LEADERBOARDS = list of leader boards that need to be updated
