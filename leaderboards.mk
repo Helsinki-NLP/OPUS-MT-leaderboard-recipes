@@ -121,7 +121,7 @@ model-lists: $(foreach l,${LANGPAIRS},scores/${l}/model-list.txt)
 
 scores/%/model-list.txt:
 	find ${dir $@} -mindepth 2 -name '*-scores.txt' | \
-	xargs cut -f2 | sed 's|https*://[^/]*/||' | sort -u > $@
+	xargs cut -f2 | sed 's|https*://[^/]*/||' | sed 's|.zip$$||' | sort -u > $@
 #	@git add $@
 
 released-models.txt: scores
@@ -212,7 +212,7 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 	    cat $(wildcard ${@:.txt=}*.unsorted.txt) | \
 	    grep '^[0-9\-]' | sort -k2,2 -k1,1nr            > $@.new.txt; \
 	    sort -m $@.new.txt $@.old.txt |\
-	    uniq -f1 | sort -k1,1nr | uniq                  > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr            > $@.sorted; \
 	    rm -f $@.old.txt $@.new.txt; \
 	    rm -f $(wildcard ${@:.txt=}*.unsorted.txt); \
 	    mv $@.sorted $@; \
@@ -222,7 +222,7 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 	  if [ $(words $(wildcard ${@:.txt=}*.txt)) -gt 0 ]; then \
 	    echo "sort ${patsubst scores/%,%,$@}"; \
 	    cat $(wildcard ${@:.txt=}*.txt) | grep '^[0-9\-]' |\
-	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr | uniq > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr             > $@.sorted; \
 	    rm -f $(wildcard ${@:.txt=}*.txt); \
 	    mv $@.sorted $@; \
 	    rm -f $(dir $<)model-list.txt; \
@@ -239,7 +239,7 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	    cat $(wildcard ${@:.txt=}*.unsorted.txt) | \
 	    grep '^[0-9\-]' | sort -k2,2 -k1,1nr            > $@.new.txt; \
 	    sort -m $@.new.txt $@.old.txt |\
-	    uniq -f1 | sort -k1,1nr | uniq                  > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr            > $@.sorted; \
 	    rm -f $@.old.txt $@.new.txt; \
 	    rm -f $(wildcard ${@:.txt=}*.unsorted.txt); \
 	    mv $@.sorted $@; \
@@ -249,7 +249,7 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	  if [ $(words $(wildcard ${@:.txt=}*.txt)) -gt 0 ]; then \
 	    echo "sort ${patsubst scores/%,%,$@}"; \
 	    cat $(wildcard ${@:.txt=}*.txt) | grep '^[0-9\-]' |\
-	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr | uniq > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr            > $@.sorted; \
 	    rm -f $(wildcard ${@:.txt=}*.txt); \
 	    mv $@.sorted $@; \
 	    rm -f $(dir $<)model-list.txt; \

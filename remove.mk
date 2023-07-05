@@ -309,6 +309,10 @@ print-affected-files:
 
 DEVSETS := $(sort $(shell cut -f1 ${SCORE_HOME}/benchmarks.txt | grep dev | grep -v devtest))
 
+print-devset-names:
+	@echo ${DEVSETS}
+
+
 .PHONY: remove-devsets
 remove-devsets:
 	${MAKE} remove-devset-scores
