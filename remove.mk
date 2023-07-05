@@ -216,7 +216,7 @@ ${SCORE_FILE_DIRS_REMOVE}: %.remove-dir: %
 ## remove files from zip archives
 
 .PHONY: update-zip-files
-update-zip-files: # ${EVALOUT_FILES} ${EVALLOG_FILES} ${EVALALL_FILES}
+update-zip-files: ${EVALOUT_FILES} ${EVALLOG_FILES} ${EVALALL_FILES}
 
 ${EVALOUT_FILES} ${EVALLOG_FILES} ${EVALALL_FILES}:
 	-zip -d $(patsubst %/,%,$(dir $@)) $(notdir $@)
@@ -241,8 +241,9 @@ ifneq (${REMOVE_PATTERN_UNESCAPED},)
 endif
 
 .PHONY: ${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}
-${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}: %.remove: %
-	rm -f $<
+${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}:
+	rm -f $(@:.remove=)
+
 
 
 update-model-lists: ${MODELLIST_FILES_UPDATE}
@@ -312,43 +313,26 @@ DEVSETS := $(sort $(shell cut -f1 ${SCORE_HOME}/benchmarks.txt | grep dev | grep
 print-devset-names:
 	@echo ${DEVSETS}
 
-
-.PHONY: remove-devsets
 remove-devsets:
-	${MAKE} remove-devset-scores
-	${MAKE} remove-devevalfiles
+	${MAKE} devset-scoredirs.txt
+	${MAKE} remove-all-devset-scores
+	rm -f devset-scoredirs.txt
 
-
-.PHONY: remove-devset-scores
-remove-devset-scores:
-	${MAKE} REMOVE_PATTERN='^($(sort $(subst ${SPACE},|,${DEVSETS})))<TAB>' remove-from-topscores
-	${MAKE} REMOVE_PATTERN='<TAB>($(sort $(subst ${SPACE},|,${DEVSETS})))<TAB>' remove-from-model-scores
-	@for d in ${DEVSETS}; do \
-	  echo "delete $$d"; \
-	  find ${SCORE_HOME}/ -maxdepth 2 -mindepth 1 -name $$d -exec rm -fr {} \; ; \
-	done
-
-
-## remove all evaluation files that belong to development sets
-## and put them into a separate zip file
-
-EVALZIP_DEV := $(patsubst %.zip,%.deveval.zip,${EVAL_ZIPFILES})
-
-.PHONY: remove-devevalfiles
-remove-devevalfiles: ${EVALZIP_DEV}
-
-${EVALZIP_DEV}: %.deveval.zip: %.eval.zip
-	mkdir -p $@.d $<.d
-	cd $<.d && unzip ../${notdir $<}
+devset-scoredirs.txt:
+	rm -f $@
 	for d in ${DEVSETS}; do \
-	  find $<.d -name "$$d.*" -exec mv {} $@.d/ \; ;\
+	  find ../scores -type d -name $$d >> $@; \
 	done
-	if [ `ls $<.d | wc -l` -gt 0 ]; then \
-	  mv $< $<.backup; \
-	  cd ${PWD}/$<.d && find . -name '*.*' | xargs zip ../${notdir $<}; \
-	  cd ${PWD}/$@.d && find . -name '*.*' | xargs zip ../${notdir $@}; \
-	fi
-	rm -fr $<.d $@.d
 
+ifneq ($(wildcard devset-scoredirs.txt),)
+  DEVSET_BENCHMARKS := $(sort $(shell cat devset-scoredirs.txt | cut -f3,4 -d/))
+  DEVSET_BENCHMARKS_REMOVE_TARGET := $(patsubst %,%.removedevset,$(DEVSET_BENCHMARKS))
+endif
 
+remove-all-devset-scores: ${DEVSET_BENCHMARKS_REMOVE_TARGET}
+
+%.removedevset:
+	${MAKE} LANGPAIR=$(firstword $(subst /, ,$(@:.removedevset=))) \
+		BENCHMARK=$(lastword $(subst /, ,$(@:.removedevset=))) \
+	remove
 
