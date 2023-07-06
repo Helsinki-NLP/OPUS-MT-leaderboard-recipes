@@ -429,7 +429,7 @@ ${MODEL_EVALZIP}: ${MODEL_DIR}
 
 .NOTINTERMIEDIATE: %.log.zip
 %.logfiles: %.log.zip
-	zipinfo -1 $< > $@
+	-zipinfo -1 $< > $@
 
 
 MODEL_PACK_EVAL := ${patsubst %,%.pack,${MODELS}}
