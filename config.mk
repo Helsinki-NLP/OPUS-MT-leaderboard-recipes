@@ -148,8 +148,11 @@ ifdef LANGPAIRDIR
   LANGPAIR = $(lastword $(subst /, ,${LANGPAIRDIR}))
 endif
 
+## NOTE that filtering becomes really slow if
+## both ALL_LANGPAIRS and MODEL_LANGPAIRS are many!
+
 ALL_LANGPAIRS := $(shell cut -f1 ${LANGPAIR_TO_TESTSETS})
-LANGPAIRS     ?= ${sort $(filter ${ALL_LANGPAIRS},${MODEL_LANGPAIRS})}
+LANGPAIRS     ?= ${sort $(filter ${MODEL_LANGPAIRS},${ALL_LANGPAIRS})}
 LANGPAIR      ?= ${firstword ${LANGPAIRS}}
 LANGPAIRSTR   := ${LANGPAIR}
 SRC           := ${firstword ${subst -, ,${LANGPAIR}}}
@@ -214,7 +217,8 @@ ifneq (${MODEL},)
 
 ifneq ($(wildcard $(dir ${MODEL_DIR})),)
 ifeq ($(wildcard ${MODEL_TESTSETS}),)
-  MAKE_BENCHMARK_FILE := $(foreach lp,${LANGPAIRS},\
+  MAKE_BENCHMARK_FILE := \
+	$(foreach lp,${LANGPAIRS},\
 	$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 		cut -f2 | tr ' ' "\n" | \
 		sed 's|^|${lp}/|' >> ${MODEL_TESTSETS}))

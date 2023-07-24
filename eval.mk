@@ -214,14 +214,14 @@ ${MODEL_DIR}/%.${LANGPAIR}.spbleu: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@echo "... create ${MODEL}/$(notdir $@)"
 	@mkdir -p ${dir $@}
 	@sed -n '3~4p' $< > $@.hyp
-	@cat $@.hyp | sacrebleu -f text --metrics=bleu --tokenize flores200 ${TESTSET_REFS} > $@
+	cat $@.hyp | sacrebleu -f text --metrics=bleu --tokenize flores200 ${TESTSET_REFS} > $@  || rm -f $@
 	@rm -f $@.hyp
 
 ${MODEL_DIR}/%.${LANGPAIR}.bleu: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@echo "... create ${MODEL}/$(notdir $@)"
 	@mkdir -p ${dir $@}
 	@sed -n '3~4p' $< > $@.hyp
-	@cat $@.hyp | sacrebleu -f text --metrics=bleu ${TESTSET_REFS} > $@
+	cat $@.hyp | sacrebleu -f text --metrics=bleu ${TESTSET_REFS} > $@ || rm -f $@
 	@rm -f $@.hyp
 
 ${MODEL_DIR}/%.${LANGPAIR}.chrf: ${MODEL_DIR}/%.${LANGPAIR}.compare
@@ -239,7 +239,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.chrf++: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@sed -n '3~4p' $< > $@.hyp
 	@cat $@.hyp | \
 	sacrebleu -f text ${SACREBLEU_PARAMS} --metrics=chrf --width=3 --chrf-word-order 2 ${TESTSET_REFS} |\
-	perl -pe 'unless (/version\:1\./){@a=split(/\s+/);$$a[-1]/=100;$$_=join(" ",@a)."\n";}' > $@
+	perl -pe 'unless (/version\:1\./){@a=split(/\s+/);$$a[-1]/=100;$$_=join(" ",@a)."\n";}' > $@  || rm -f $@
 	@rm -f $@.hyp
 
 ${MODEL_DIR}/%.${LANGPAIR}.ter: ${MODEL_DIR}/%.${LANGPAIR}.compare
@@ -247,7 +247,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.ter: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@mkdir -p ${dir $@}
 	@sed -n '3~4p' $< > $@.hyp
 	@cat $@.hyp | \
-	sacrebleu -f text ${SACREBLEU_PARAMS} --metrics=ter ${TESTSET_REFS} > $@
+	sacrebleu -f text ${SACREBLEU_PARAMS} --metrics=ter ${TESTSET_REFS} > $@  || rm -f $@
 	@rm -f $@.hyp
 
 
@@ -265,7 +265,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.comet: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@sed -n '2~4p' $< > $@.ref
 	@sed -n '3~4p' $< > $@.hyp
 	@${LOAD_COMET_ENV} ${COMET_SCORE} ${COMET_PARAM} \
-		-s $@.src -r $@.ref -t $@.hyp | cut -f2,3 > $@
+		-s $@.src -r $@.ref -t $@.hyp | cut -f2,3 > $@  || rm -f $@
 	@rm -f $@.src $@.ref $@.hyp
 
 
@@ -301,8 +301,10 @@ endif
 	@echo "... create ${MODEL}/$(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
 	  echo "... create ${MODEL_SCORES}"; \
-	  find ${MODEL_DIR} -name '*.bleu' | xargs grep -H BLEU | sed 's/.bleu//' | sort > $@.bleu; \
-	  find ${MODEL_DIR} -name '*.chrf' | xargs grep -H chrF | sed 's/.chrf//' | sort > $@.chrf; \
+	  find ${MODEL_DIR} -name '*.bleu' | xargs grep -H BLEU | \
+		grep -v 'tok:flores' | sed 's/.bleu//' | sort                > $@.bleu; \
+	  find ${MODEL_DIR} -name '*.chrf' | xargs grep -H chrF | \
+		sed 's/.chrf//' | sort                                       > $@.chrf; \
 	  join -t: -j1 $@.bleu $@.chrf                                       > $@.bleu-chrf; \
 	  cut -f1 -d: $@.bleu-chrf | rev | cut -f1 -d. | rev                 > $@.langs; \
 	  cut -f1 -d: $@.bleu-chrf | rev | cut -f1 -d/ | cut -f2- -d. | rev  > $@.testsets; \
