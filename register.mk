@@ -82,3 +82,27 @@ ${SCOREFILES_VALIDATED}: %.validated: %
 	  sort -u $@ > $<; \
 	fi
 	@touch $@
+
+
+
+
+score-db: ${SCORE_DB}
+
+${SCORE_DB}: ${SCORE_CSV}
+	echo "create table scores (\
+		model TEXT NOT NULL, \
+		langpair TEXT NOT NULL, \
+		testset TEXT NOT NULL, \
+		score NUMERIC, \
+		PRIMARY KEY (model, langpair, testset) \
+		);" | \
+	sqlite3 $@
+	echo ".import --csv $< scores" | sqlite3 $@
+
+${SCORE_CSV}: ${MODEL_HOME}
+	find $< -name '*.${METRIC}-scores.txt' | \
+	xargs grep -H . | tr ':' "\t" | \
+	sed 's|$</||' | sed 's|.${METRIC}-scores.txt||' |\
+	tr "\t" ',' > $@
+
+

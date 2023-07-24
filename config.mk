@@ -91,6 +91,8 @@ TESTSET_INDEX   := ${OPUSMT_TESTSETS}/index.txt
 
 SCORE_HOME       ?= ${REPOHOME}scores
 MODEL_HOME       ?= ${REPOHOME}models
+SCORE_DB         := ${REPOHOME}models.db
+SCORE_CSV        := ${REPOHOME}models.csv
 MODEL_DIR        := ${MODEL_HOME}/${MODEL}
 MODEL_EVALZIP    := ${MODEL_DIR}.zip
 MODEL_EVALLOGZIP := ${MODEL_DIR}.log.zip
