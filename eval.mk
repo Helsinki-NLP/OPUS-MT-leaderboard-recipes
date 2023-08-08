@@ -88,9 +88,11 @@ eval-model-files: ${MODEL_EVAL_SCORES}
 .PHONY: update-eval-files
 update-eval-files:
 	if [ -e ${MODEL_SCORES} ]; then \
-	  mv -f ${MODEL_SCORES} ${MODEL_SCORES}.${TODAY}; \
+	  if [ `find ${MODEL_DIR} -name '*.bleu' | wc -l` -gt `cat ${MODEL_SCORES} | wc -l` ]; then \
+	    mv -f ${MODEL_SCORES} ${MODEL_SCORES}.${TODAY}; \
+	  fi \
 	fi
-	${MAKE} eval-model-files
+	${MAKE} SKIP_NEW_EVALUATION=1 eval-model-files
 
 
 ## new way of evaluating missing benchmarks
@@ -101,12 +103,10 @@ eval-model: ${MODEL_TESTSETS}
 	@echo ".... evaluate ${MODEL}"
 ifneq (${MISSING_BENCHMARKS},)
 	${MAKE} fetch
-	if [ `find ${MODEL_DIR} -name '*.bleu' | wc -l` -gt 0 ]; then \
-	  ${MAKE} SKIP_NEW_EVALUATION=1 update-eval-files; \
-	fi
+	${MAKE} update-eval-files
 	${MAKE} eval-missing-benchmarks
 	${MAKE} cleanup
-	${MAKE} SKIP_NEW_EVALUATION=1 eval-model-files
+	${MAKE} update-eval-files
 	${MAKE} pack-model-scores
 else
 	@echo ".... nothing is missing"
@@ -305,9 +305,9 @@ endif
 	@if [ -d ${MODEL_DIR} ]; then \
 	  echo "... create ${MODEL_SCORES}"; \
 	  find ${MODEL_DIR} -name '*.bleu' | xargs grep -H BLEU | \
-		grep -v 'tok:flores' | sed 's/.bleu//' | sort                > $@.bleu; \
+		grep -v 'tok:flores' | sed 's/.bleu//' | sort -t: -k1,1      > $@.bleu; \
 	  find ${MODEL_DIR} -name '*.chrf' | xargs grep -H chrF | \
-		sed 's/.chrf//' | sort                                       > $@.chrf; \
+		sed 's/.chrf//' | sort -t: -k1,1                             > $@.chrf; \
 	  join -t: -j1 $@.bleu $@.chrf                                       > $@.bleu-chrf; \
 	  cut -f1 -d: $@.bleu-chrf | rev | cut -f1 -d. | rev                 > $@.langs; \
 	  cut -f1 -d: $@.bleu-chrf | rev | cut -f1 -d/ | cut -f2- -d. | rev  > $@.testsets; \
