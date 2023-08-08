@@ -107,7 +107,9 @@ reverse = $(if $(wordlist 2,2,$(1)),$(call reverse,$(wordlist 2,$(words $(1)),$(
 
 
 LEADERBOARD_GITURL = https://raw.githubusercontent.com/Helsinki-NLP/${LEADERBOARD}/master
-MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(notdir ${MODEL_HOME})
+# MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(patsubst $(MODEL_HOME)%,%,${MODEL_DIR})
+# MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(notdir ${MODEL_HOME})
+MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models
 
 
 ## score files with all evaluation results
