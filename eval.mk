@@ -101,6 +101,7 @@ eval-model: ${MODEL_TESTSETS}
 	@echo ".... evaluate ${MODEL}"
 ifneq (${MISSING_BENCHMARKS},)
 	${MAKE} fetch
+	${MAKE} update-eval-files
 	${MAKE} eval-missing-benchmarks
 	${MAKE} cleanup
 	${MAKE} SKIP_NEW_EVALUATION=1 ${MODEL_EVAL_SCORES}; \
