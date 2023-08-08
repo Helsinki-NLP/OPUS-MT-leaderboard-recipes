@@ -106,6 +106,13 @@ LEADERBOARD_DIR = ${REPOHOME}scores
 reverse = $(if $(wordlist 2,2,$(1)),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
 
 
+## MODEL_EVAL_URL: location of the storage space for the evaluation output files
+
+STORAGE_BUCKET  := ${LEADERBOARD}
+MODEL_STORAGE   := https://object.pouta.csc.fi/${STORAGE_BUCKET}
+MODEL_EVAL_URL  := ${MODEL_STORAGE}/${MODEL}.eval.zip
+
+
 LEADERBOARD_GITURL = https://raw.githubusercontent.com/Helsinki-NLP/${LEADERBOARD}/master
 # MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(patsubst $(MODEL_HOME)%,%,${MODEL_DIR})
 # MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(notdir ${MODEL_HOME})

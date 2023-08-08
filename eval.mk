@@ -87,9 +87,13 @@ eval-model-files: ${MODEL_EVAL_SCORES}
 
 .PHONY: update-eval-files
 update-eval-files:
-	if [ -e ${MODEL_SCORES} ]; then \
-	  if [ `find ${MODEL_DIR} -name '*.bleu' | wc -l` -gt `cat ${MODEL_SCORES} | wc -l` ]; then \
-	    mv -f ${MODEL_SCORES} ${MODEL_SCORES}.${TODAY}; \
+	@if [ -d ${MODEL_DIR} ]; then \
+	  find ${MODEL_DIR} -name '*.bleu' -empty -delete; \
+	  if [ -e ${MODEL_SCORES} ]; then \
+	    if [ `find ${MODEL_DIR} -name '*.bleu' | wc -l` -gt `cat ${MODEL_SCORES} | wc -l` ]; then \
+	      echo "move $(notdir ${MODEL_SCORES}) to $(notdir ${MODEL_SCORES}.${TODAY})"; \
+	      mv -f ${MODEL_SCORES} ${MODEL_SCORES}.${TODAY}; \
+	    fi \
 	  fi \
 	fi
 	${MAKE} SKIP_NEW_EVALUATION=1 eval-model-files
@@ -301,9 +305,8 @@ ifndef SKIP_NEW_EVALUATION
 	${MAKE} eval-langpairs
 	${MAKE} cleanup
 endif
-	@echo "... create $(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
-	  echo "... create ${MODEL_SCORES}"; \
+	  echo "... create $(notdir $@)"; \
 	  find ${MODEL_DIR} -name '*.bleu' | xargs grep -H BLEU | \
 		grep -v 'tok:flores' | sed 's/.bleu//' | sort -t: -k1,1      > $@.bleu; \
 	  find ${MODEL_DIR} -name '*.chrf' | xargs grep -H chrF | \

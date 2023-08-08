@@ -1,15 +1,10 @@
 # -*-makefile-*-
 
 
-MODEL_HOME      ?= ${PWD}
-
 ## MODEL_URL: location of the public model (to be stored in the score files)
-## MODEL_EVAL_URL: location of the storage space for the evaluation output files
 
+MODEL_HOME      ?= ${PWD}
 MODEL_URL       := https://location.of.my.model/storage/${MODEL}
-STORAGE_BUCKET  := ${LEADERBOARD}
-MODEL_STORAGE   := https://object.pouta.csc.fi/${STORAGE_BUCKET}
-MODEL_EVAL_URL  := ${MODEL_STORAGE}/${MODEL}.eval.zip
 
 
 ## scores that need to be registered (stored in temporary score files)
