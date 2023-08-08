@@ -101,7 +101,9 @@ eval-model: ${MODEL_TESTSETS}
 	@echo ".... evaluate ${MODEL}"
 ifneq (${MISSING_BENCHMARKS},)
 	${MAKE} fetch
-	${MAKE} SKIP_NEW_EVALUATION=1 update-eval-files
+	if [ `find ${MODEL_DIR} -name '*.bleu' | wc -l` -gt 0 ]; then \
+	  ${MAKE} SKIP_NEW_EVALUATION=1 update-eval-files; \
+	fi
 	${MAKE} eval-missing-benchmarks
 	${MAKE} cleanup
 	${MAKE} SKIP_NEW_EVALUATION=1 eval-model-files
@@ -299,7 +301,7 @@ ifndef SKIP_NEW_EVALUATION
 	${MAKE} eval-langpairs
 	${MAKE} cleanup
 endif
-	@echo "... create ${MODEL}/$(notdir $@)"
+	@echo "... create $(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
 	  echo "... create ${MODEL_SCORES}"; \
 	  find ${MODEL_DIR} -name '*.bleu' | xargs grep -H BLEU | \
@@ -343,7 +345,7 @@ endif
 ##
 
 ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
-	@echo "... create ${MODEL}/$(notdir $@)"
+	@echo "... create $(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
 	  mkdir -p $(dir $@); \
 	  find ${MODEL_DIR} -name '*.$(patsubst ${MODEL_DIR}.%-scores.txt,%,$@)' | xargs grep -H . > $@.all; \
@@ -363,7 +365,7 @@ ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
 ## specific recipe for COMET scores
 
 ${MODEL_DIR}.comet-scores.txt: ${MODEL_SCORES}
-	@echo "... create ${MODEL}/$(notdir $@)"
+	@echo "... create $(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
 	  mkdir -p $(dir $@); \
 	  find ${MODEL_DIR} -name '*.comet' | xargs grep -H '^score:' | sort > $@.comet; \
