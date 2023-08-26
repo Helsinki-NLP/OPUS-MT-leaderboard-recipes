@@ -30,7 +30,22 @@ endif
 MODEL_EVALZIPS  ?= $(patsubst %,%.eval.zip,$(sort $(basename ${SCOREFILES:.txt=})))
 
 
+git-add-evalfiles: git-add-output git-add-eval git-add-zip
 
+.PHONY: git-add-output
+git-add-output:
+	git ls-files --others --exclude-standard | \
+	grep '\.output$$' | xargs git add
+
+.PHONY: git-add-eval
+git-add-eval:
+	git ls-files --others --exclude-standard | \
+	grep '\.eval$$' | xargs git add
+
+.PHONY: git-add-zip
+git-add-zip:
+	git ls-files --others --exclude-standard | \
+	grep '\.zip$$' | grep -v '\.eval\.zip' | xargs git add
 
 
 .PHONY: upload upload-eval-files

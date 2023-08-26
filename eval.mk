@@ -178,9 +178,10 @@ ${TRANSLATED_BENCHMARK}: ${SYSTEM_OUTPUT}
 	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
 	fi
 
-.NOTINTERMEDIATE: %.output
+.NOTINTERMEDIATE: %.output %.eval
 
-${EVALUATED_BENCHMARKS}: %.eval: %.output
+# ${EVALUATED_BENCHMARKS}: %.eval: %.output
+%.eval: %.output
 	${MAKE} $(@:.eval=.compare)
 	${MAKE} $(patsubst %,$(basename $@).%,${METRICS})
 	@for m in ${METRICS}; do \
@@ -215,6 +216,35 @@ endif
 		${MODEL_DIR}/%.${LANGPAIR}.chrf++ \
 		${MODEL_DIR}/%.${LANGPAIR}.ter \
 		${MODEL_DIR}/%.${LANGPAIR}.comet
+
+
+## NEW: zipfiles with all logfiles from individual benchmarks
+
+ifdef CREATE_BENCHMARK_EVALZIP_FILES
+
+BENCHMARK_EVALZIP_FILES = $(patsubst %.eval,%.evalfiles.zip,$(shell find . -type f -name '*.eval'))
+create_benchmark_evalzip_files: ${BENCHMARK_EVALZIP_FILES}
+
+endif
+
+
+%.evalfiles.zip: # %.eval
+	-if [ -e $(patsubst %/,%.zip,$(dir $@)) ]; then \
+	  unzip -n $(patsubst %/,%.zip,$(dir $@)) '$(notdir $(@:.evalfiles.zip=.*))' -d $(dir $@); \
+	fi
+	-if [ -e $(patsubst %/,%.log.zip,$(dir $@)) ]; then \
+	  unzip -n $(patsubst %/,%.log.zip,$(dir $@)) '$(notdir $(@:.evalfiles.zip=.*))' -d $(dir $@); \
+	fi
+	-if [ -e $(patsubst %/,%.eval.zip,$(dir $@)) ]; then \
+	  unzip -n $(patsubst %/,%.eval.zip,$(dir $@)) '$(notdir $(@:.evalfiles.zip=.*))' -d $(dir $@); \
+	fi
+	cd $(dir $@) && \
+	find . -type f -name '$(notdir $(@:.evalfiles.zip=.*))' \
+		-not -name '*.zip' -not -name '*.compare' -not -name '*.output' |\
+	xargs zip $(notdir $@)
+	find . -type f -name '$(notdir $(@:.evalfiles.zip=.*))' \
+		-not -name '*.zip' -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
+
 
 
 ${MODEL_DIR}/%.${LANGPAIR}.spbleu: ${MODEL_DIR}/%.${LANGPAIR}.compare
@@ -346,6 +376,10 @@ endif
 ## (works for all sacrebleu results but not for other metrics)
 ##-------------------------------------------------
 ##
+## TODO: merge with existing one instead of overwriting and making all from scratch
+##       --> necessary if we don't unpack all existing scores!
+##       --> the same applies for the comet-scores below
+##
 
 ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
 	@echo "... create $(notdir $@)"
@@ -416,7 +450,7 @@ ${MODEL_DIR}/.scores:
 
 .PHONY: pack-model-scores
 pack-model-scores: ${MODEL_EVALALLZIP} ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
-	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.eval' -delete
+	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.zip' -not -name '*.eval' -delete
 	rm -f ${MODEL_DIR}/.scores
 #	-git add ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
 

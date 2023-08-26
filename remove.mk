@@ -104,6 +104,7 @@ endif
 
 
 TRANSLATION_FILES := $(patsubst %.eval,%.output,${EVAL_FILES})
+EVAL_LOGFILES     := $(patsubst %.eval,%.evalfiles.zip,${EVAL_FILES})
 EVALALL_FILES     := $(subst .zip/,.eval.zip/,${EVALOUT_FILES})
 EVALLOG_FILES     := $(subst .zip/,.log.zip/,${EVALOUT_FILES})
 MODELSCORE_FILES  := $(sort $(foreach model,$(MODELS),$(wildcard ${MODEL_HOME}/$(model).*.txt)))
@@ -116,6 +117,7 @@ MODELLIST_FILES   := $(sort $(foreach langpair,$(LANGPAIRS),$(wildcard ${SCORE_H
 ## also used as targets to actually remove them from the original files
 
 TRANSLATION_FILES_REMOVE := $(patsubst %,%.remove,${TRANSLATION_FILES})
+EVAL_LOGFILES_REMOVE     := $(patsubst %,%.remove,${EVAL_LOGFILES})
 EVAL_FILES_REMOVE        := $(patsubst %,%.remove,${EVAL_FILES})
 SCORE_FILE_DIRS_REMOVE   := $(patsubst %,%.remove-dir,${SCORE_FILE_DIRS})
 SCORE_FILES_REMOVE       := $(patsubst %.txt,%.remove,${SCORE_FILES})
@@ -124,8 +126,8 @@ MODELLIST_FILES_REMOVE   := $(patsubst %.txt,%.remove,${MODELLIST_FILES})
 MODELLIST_FILES_UPDATE   := $(patsubst %.txt,%.update,${MODELLIST_FILES})
 
 
-TOPSCORE_FILES_REMOVE   := $(patsubst %.txt,%.remove,${TOPSCORE_FILES})
-AVGSCORE_FILES_REMOVE   := $(patsubst %.txt,%.remove,${AVGSCORE_FILES})
+TOPSCORE_FILES_REMOVE    := $(patsubst %.txt,%.remove,${TOPSCORE_FILES})
+AVGSCORE_FILES_REMOVE    := $(patsubst %.txt,%.remove,${AVGSCORE_FILES})
 
 
 ##-----------------------------------------------------------------------------
@@ -228,7 +230,7 @@ remove-from-scores: ${SCORE_FILES_REMOVE}
 remove-from-model-scores: ${MODELSCORE_FILES_REMOVE}
 remove-from-model-lists: ${MODELLIST_FILES_REMOVE}
 remove-translation-files: ${TRANSLATION_FILES_REMOVE}
-remove-eval-files: ${EVAL_FILES_REMOVE}
+remove-eval-files: ${EVAL_FILES_REMOVE} ${EVAL_LOGFILES_REMOVE}
 
 ## replace special tokens (TAB and end-of-string) with the actual character/regex to be matched
 REMOVE_PATTERN_UNESCAPED := $(subst <EOS>,$$,$(subst <TAB>,	,${REMOVE_PATTERN}))
@@ -240,8 +242,8 @@ ifneq (${REMOVE_PATTERN_UNESCAPED},)
 	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $<.backup > $< || exit 0
 endif
 
-.PHONY: ${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}
-${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}:
+.PHONY: ${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE} ${EVAL_LOGFILES_REMOVE}
+${TRANSLATION_FILES_REMOVE} ${EVAL_LOGFILES_REMOVE} ${EVAL_FILES_REMOVE}:
 	rm -f $(@:.remove=)
 
 

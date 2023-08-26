@@ -249,9 +249,10 @@ endif
 
 .INTERMEDIATE: ${SYSTEM_INPUT}
 
-TRANSLATED_BENCHMARKS := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.compare,${TESTSETS})
-EVALUATED_BENCHMARKS  := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.eval,${TESTSETS})
-BENCHMARK_SCORE_FILES := $(foreach m,${METRICS},${MODEL_DIR}/${TESTSET}.${LANGPAIR}.${m})
+TRANSLATED_BENCHMARKS    := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.compare,${TESTSETS})
+EVALUATED_BENCHMARKS     := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.eval,${TESTSETS})
+# EVALUATED_BENCHMARKS     := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.evalfiles.zip,${TESTSETS})
+BENCHMARK_SCORE_FILES    := $(foreach m,${METRICS},${MODEL_DIR}/${TESTSET}.${LANGPAIR}.${m})
 
 ## don't delete those files when used in implicit rules
 .NOTINTERMEDIATE: ${TRANSLATED_BENCHMARKS} ${EVALUATED_BENCHMARKS} ${BENCHMARK_SCORE_FILES}
