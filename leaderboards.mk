@@ -38,8 +38,7 @@ LEADERBOARDS := $(foreach m,${METRICS},$(patsubst %,%/$(m)-scores.txt,${SCORE_DI
 
 LANGPAIR_LISTS  := scores/langpairs.txt
 BENCHMARK_LISTS := scores/benchmarks.txt
-
-
+MODEL_LIST      := models/modelsize.txt
 
 
 #--------------------------------------------------
@@ -139,6 +138,14 @@ release-history.txt: released-models.txt
 	paste $@.date $@.pkg $@.langpair $@.model | sort -r | sed 's/\.zip$$//' > $@
 	rm -f $@.langpair $@.model $@.date $@.pkg
 #	@git add $@
+
+
+${MODEL_LIST}:
+	find models -name '*.info' \
+	| xargs grep parameters  \
+	| sed 's|^models/||;s/\.info:/:/' \
+	| tr ':' "\t" > $@
+
 
 .PHONY: top-score-file top-scores
 top-score-file: scores/${LANGPAIR}/top-${METRIC}-scores.txt
