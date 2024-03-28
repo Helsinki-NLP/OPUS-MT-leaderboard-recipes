@@ -161,7 +161,7 @@ endif
 ## both ALL_LANGPAIRS and MODEL_LANGPAIRS are many!
 
 ALL_LANGPAIRS := $(shell cut -f1 ${LANGPAIR_TO_TESTSETS})
-LANGPAIRS     ?= ${sort $(filter ${MODEL_LANGPAIRS},${ALL_LANGPAIRS})}
+LANGPAIRS     := ${sort $(filter ${MODEL_LANGPAIRS},${ALL_LANGPAIRS})}
 LANGPAIR      ?= ${firstword ${LANGPAIRS}}
 LANGPAIRSTR   := ${LANGPAIR}
 SRC           := ${firstword ${subst -, ,${LANGPAIR}}}
