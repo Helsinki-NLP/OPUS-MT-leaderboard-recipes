@@ -36,36 +36,38 @@ register-all register-scores register-model-scores:
 
 
 ## register scores from current model in leaderboards
+## (scores will be added to some temporary files sorted by language pair and benchmark)
+## NOTE: this removes langIDs from newstest sets to avoid confusion and duplicates
+
 .PHONY: register
 register: ${SCOREFILES_DONE}
 
 
+
+## USAGE: ${REGISTER_SCORES_SCRIPT} scoresdir modelname tmpfilename
+## TODO: replace this Perl script with something more transparent
+
+REGISTER_SCORES_SCRIPT = perl -e '$$d=shift(@ARGV);$$m=shift(@ARGV);$$t=shift(@ARGV);while (<>){ chomp; @a=split(/\t/); $$a[1]=~s/^(news.*)\-[a-z]{4}/$$1/; system "mkdir -p $$d/$$a[0]/$$a[1]"; open C,">>$$d/$$a[0]/$$a[1]/$$t.unsorted.txt"; if ($$a[2] && $$m){print C "$$a[2]\t$$m\n";} close C; }'
+
+
+## for OPUS-MT-leaderboard: take modelurl from *.scores.txt
+## for other leaderboards: take modelname from the model path
+
+${MODEL_HOME}/%-scores.registered: ${MODEL_HOME}/%-scores.txt
+	@echo "register scores from ${patsubst ${MODEL_HOME}/%,%,$<}"
 ifeq (${LEADERBOARD},OPUS-MT-leaderboard)
-
-## register the scores for the current model
-## (scores will be added to some temporary files sorted by language pair and benchmark)
-## NOTE: this removes langIDs from newstest sets to avoid confusion and duplicates
-
-${MODEL_HOME}/%-scores.registered: ${MODEL_HOME}/%-scores.txt
-	@echo "register scores from ${patsubst ${MODEL_HOME}/%,%,$<}"
-	@cat $< | perl -e 'while (<>){ chomp; @a=split(/\t/); $$a[1]=~s/^(news.*)\-[a-z]{4}/$$1/; system "mkdir -p ${LEADERBOARD_DIR}/$$a[0]/$$a[1]"; open C,">>${LEADERBOARD_DIR}/$$a[0]/$$a[1]/$(patsubst .%,%,$(suffix $(basename $<))).$(subst /,.,${patsubst ${MODEL_HOME}/%,%,$<}).unsorted.txt"; $$m="$(shell cut -f5 $(basename $(basename $<)).scores.txt | head -1)";if ($$a[2] && $$m){print C "$$a[2]\t$$m\n";} close C; }'
-	@touch $@
-#	@git add $< $@
-
+	@cat $< | ${REGISTER_SCORES_SCRIPT} \
+		${LEADERBOARD_DIR} \
+		"$(shell cut -f5 $(basename $(basename $<)).scores.txt | head -1)" \
+		"$(patsubst .%,%,$(suffix $(basename $<))).$(subst /,.,${patsubst ${MODEL_HOME}/%,%,$<})"
 else
-
-## register the scores for the current model
-## (scores will be added to some temporary files sorted by language pair and benchmark)
-## NOTE: this removes langIDs from newstest sets to avoid confusion and duplicates
-
-${MODEL_HOME}/%-scores.registered: ${MODEL_HOME}/%-scores.txt
-	@echo "register scores from ${patsubst ${MODEL_HOME}/%,%,$<}"
-	@cat $< | perl -e 'while (<>){ chomp; @a=split(/\t/); $$a[1]=~s/^(news.*)\-[a-z]{4}/$$1/; system "mkdir -p ${LEADERBOARD_DIR}/$$a[0]/$$a[1]"; open C,">>${LEADERBOARD_DIR}/$$a[0]/$$a[1]/$(patsubst .%,%,$(suffix $(basename $<))).$(subst /,.,${patsubst ${MODEL_HOME}/%,%,$<}).unsorted.txt"; $$m="$(basename $(basename $(patsubst ${MODEL_HOME}/%,%,$<)))";if ($$a[2] && $$m){print C "$$a[2]\t$$m\n";} close C; }'
+	@cat $< | ${REGISTER_SCORES_SCRIPT} \
+		${LEADERBOARD_DIR} \
+		"$(basename $(basename $(patsubst ${MODEL_HOME}/%,%,$<)))" \
+		"$(patsubst .%,%,$(suffix $(basename $<))).$(subst /,.,${patsubst ${MODEL_HOME}/%,%,$<})"
+endif
 	@touch $@
 #	@git add $< $@
-
-endif
-
 
 
 SCOREFILES_VALIDATED = $(patsubst %,%.validated,${SCOREFILES})

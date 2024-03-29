@@ -322,6 +322,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.comet: ${MODEL_DIR}/%.${LANGPAIR}.compare
 #	  grep -H BLEU ${MODEL_DIR}/*.bleu | sed 's/.bleu//' | sort          > $@.bleu; \
 #	  grep -H chrF ${MODEL_DIR}/*.chrf | sed 's/.chrf//' | sort          > $@.chrf;
 
+model-scores: ${MODEL_SCORES}
 
 ${MODEL_SCORES}: ${TESTSET_INDEX} ${TESTSET_FILES}
 ifndef SKIP_OLD_EVALUATION
