@@ -228,7 +228,8 @@ ifneq ($(wildcard $(dir ${MODEL_DIR})),)
 ifeq ($(wildcard ${MODEL_TESTSETS}),)
   MAKE_BENCHMARK_FILE := \
 	$(foreach lp,${LANGPAIRS},\
-	$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
+	$(shell mkdir -p $(dir ${MODEL_TESTSETS}) && \
+		grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 		cut -f2 | tr ' ' "\n" | \
 		sed 's|^|${lp}/|' >> ${MODEL_TESTSETS}))
 endif
