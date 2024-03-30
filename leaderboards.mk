@@ -140,7 +140,7 @@ release-history.txt: released-models.txt
 #	@git add $@
 
 
-${MODEL_LIST}:
+${MODEL_LIST}: models
 	find models -name '*.info' \
 	| xargs grep parameters  \
 	| sed 's|^models/||;s/\.info:/:/' \
