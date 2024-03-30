@@ -81,7 +81,8 @@ update-leaderboards: ${LEADERBOARDS}
 .PHONY: updated-leaderboards
 updated-leaderboards:
 	${MAKE} UPDATED_LEADERBOARDS=1 update-leaderboards
-	${MAKE} UPDATED_LEADERBOARDS=1 all-topavg-scores
+	${MAKE} all-topavg-scores
+#	${MAKE} UPDATED_LEADERBOARDS=1 all-topavg-scores
 
 
 
