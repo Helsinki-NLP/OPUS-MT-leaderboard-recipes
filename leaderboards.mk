@@ -273,7 +273,7 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 
 
 %/langpairs.txt: %
-	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}##' | sort > $@
+	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}/##' | sort > $@
 #	@git add $@
 
 ## printf does not exist on Mac OS
