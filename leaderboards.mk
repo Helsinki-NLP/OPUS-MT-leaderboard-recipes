@@ -38,8 +38,7 @@ LEADERBOARDS := $(foreach m,${METRICS},$(patsubst %,%/$(m)-scores.txt,${SCORE_DI
 
 LANGPAIR_LISTS  := scores/langpairs.txt
 BENCHMARK_LISTS := scores/benchmarks.txt
-
-
+MODEL_LIST      := models/modelsize.txt
 
 
 #--------------------------------------------------
@@ -82,7 +81,8 @@ update-leaderboards: ${LEADERBOARDS}
 .PHONY: updated-leaderboards
 updated-leaderboards:
 	${MAKE} UPDATED_LEADERBOARDS=1 update-leaderboards
-	${MAKE} UPDATED_LEADERBOARDS=1 all-topavg-scores
+	${MAKE} all-topavg-scores
+#	${MAKE} UPDATED_LEADERBOARDS=1 all-topavg-scores
 
 
 
@@ -139,6 +139,14 @@ release-history.txt: released-models.txt
 	paste $@.date $@.pkg $@.langpair $@.model | sort -r | sed 's/\.zip$$//' > $@
 	rm -f $@.langpair $@.model $@.date $@.pkg
 #	@git add $@
+
+
+${MODEL_LIST}: models
+	find models -name '*.info' \
+	| xargs grep parameters  \
+	| sed 's|^models/||;s/\.info:/:/' \
+	| tr ':' "\t" > $@
+
 
 .PHONY: top-score-file top-scores
 top-score-file: scores/${LANGPAIR}/top-${METRIC}-scores.txt
@@ -265,7 +273,7 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 
 
 %/langpairs.txt: %
-	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}##' | sort > $@
+	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}/##' | sort > $@
 #	@git add $@
 
 ## printf does not exist on Mac OS
