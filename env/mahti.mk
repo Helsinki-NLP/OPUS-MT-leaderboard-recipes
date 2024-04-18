@@ -56,8 +56,8 @@ endif
 
 
 
-CPU_MODULES   = gcc cuda cudnn openblas openmpi
-GPU_MODULES   = gcc cuda cudnn openblas openmpi
+CPU_MODULES   = gcc cuda cudnn openblas openmpi git
+GPU_MODULES   = gcc cuda cudnn openblas openmpi git
 LOAD_CPU_ENV  = module load ${CPU_MODULES}
 LOAD_GPU_ENV  = module load ${GPU_MODULES}
 

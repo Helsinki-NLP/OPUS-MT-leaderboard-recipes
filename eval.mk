@@ -242,7 +242,7 @@ endif
 	find . -type f -name '$(notdir $(@:.evalfiles.zip=.*))' \
 		-not -name '*.zip' -not -name '*.compare' -not -name '*.output' |\
 	xargs zip $(notdir $@)
-	find . -type f -name '$(notdir $(@:.evalfiles.zip=.*))' \
+	find $(dir $@) -type f -name '$(notdir $(@:.evalfiles.zip=.*))' \
 		-not -name '*.zip' -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
 
 
