@@ -148,14 +148,6 @@ ${MODEL_LIST}: models
 	| tr ':' "\t" > $@
 
 
-release-history.txt: released-models.txt
-	cat $< | rev | cut -f3 -d'/' | rev > $@.pkg
-	cat $< | rev | cut -f2 -d'/' | rev > $@.langpair
-	cat $< | rev | cut -f1 -d'/' | rev > $@.model
-	cat $< | sed 's/^.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)\.zip$$/\1/' > $@.date
-	paste $@.date $@.pkg $@.langpair $@.model | sort -r | sed 's/\.zip$$//' > $@
-	rm -f $@.langpair $@.model $@.date $@.pkg
-
 .PHONY: top-score-file top-scores
 top-score-file: scores/${LANGPAIR}/top-${METRIC}-scores.txt
 top-scores: $(foreach m,${METRICS},scores/${LANGPAIR}/top-${m}-scores.txt)

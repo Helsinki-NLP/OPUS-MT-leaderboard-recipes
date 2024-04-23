@@ -91,7 +91,7 @@ ${SCOREFILES_VALIDATED}: %.validated: %
 score-db: ${SCORE_DB}
 
 ${SCORE_DB}: ${SCORE_CSV}
-	if [ -e $@ ]; then \
+	if [ ! -e $@ ]; then \
 	  echo "create table scores (\
 		metric TEXT NOT NULL, \
 		model TEXT NOT NULL, \
