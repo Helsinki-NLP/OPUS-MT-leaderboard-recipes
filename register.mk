@@ -105,14 +105,14 @@ ${SCORE_DB}: ${SCORE_CSV}
 	echo ".import --csv $< scores" | sqlite3 $@
 
 ${SCORE_CSV}: ${MODEL_HOME}
-	rm -f $@
-	for m in ${METRICS}; do \
-	  echo "add scores for '$$m'"; \
+	@rm -f $@
+	@for m in ${METRICS}; do \
+	  echo "find all $$m scores"; \
 	  find $< -name "*.$$m-scores.txt" | \
 	  xargs grep -H . \
 	  | tr ':' "\t" \
 	  | sed "s|$</||" \
-	  | sed 's|.${METRIC}-scores.txt||' \
+	  | sed "s|.$$m-scores.txt||" \
 	  | sed "s/^/$$m	/" \
 	  | tr "\t" ',' >> $@; \
 	done
