@@ -101,6 +101,7 @@ ${SCORE_DB}: ${SCORE_CSV}
 		PRIMARY KEY (model, langpair, testset, metric) \
 		);" | sqlite3 $@; \
 	fi
+	date > ${@:.db=.date}
 	echo ".import --csv $< scores" | sqlite3 $@
 
 ${SCORE_CSV}: ${MODEL_HOME}
