@@ -104,6 +104,7 @@ endif
 
 
 TRANSLATION_FILES := $(patsubst %.eval,%.output,${EVAL_FILES})
+EVAL_LOGFILES     := $(patsubst %.eval,%.evalfiles.zip,${EVAL_FILES})
 EVALALL_FILES     := $(subst .zip/,.eval.zip/,${EVALOUT_FILES})
 EVALLOG_FILES     := $(subst .zip/,.log.zip/,${EVALOUT_FILES})
 MODELSCORE_FILES  := $(sort $(foreach model,$(MODELS),$(wildcard ${MODEL_HOME}/$(model).*.txt)))
@@ -116,6 +117,7 @@ MODELLIST_FILES   := $(sort $(foreach langpair,$(LANGPAIRS),$(wildcard ${SCORE_H
 ## also used as targets to actually remove them from the original files
 
 TRANSLATION_FILES_REMOVE := $(patsubst %,%.remove,${TRANSLATION_FILES})
+EVAL_LOGFILES_REMOVE     := $(patsubst %,%.remove,${EVAL_LOGFILES})
 EVAL_FILES_REMOVE        := $(patsubst %,%.remove,${EVAL_FILES})
 SCORE_FILE_DIRS_REMOVE   := $(patsubst %,%.remove-dir,${SCORE_FILE_DIRS})
 SCORE_FILES_REMOVE       := $(patsubst %.txt,%.remove,${SCORE_FILES})
@@ -124,8 +126,8 @@ MODELLIST_FILES_REMOVE   := $(patsubst %.txt,%.remove,${MODELLIST_FILES})
 MODELLIST_FILES_UPDATE   := $(patsubst %.txt,%.update,${MODELLIST_FILES})
 
 
-TOPSCORE_FILES_REMOVE   := $(patsubst %.txt,%.remove,${TOPSCORE_FILES})
-AVGSCORE_FILES_REMOVE   := $(patsubst %.txt,%.remove,${AVGSCORE_FILES})
+TOPSCORE_FILES_REMOVE    := $(patsubst %.txt,%.remove,${TOPSCORE_FILES})
+AVGSCORE_FILES_REMOVE    := $(patsubst %.txt,%.remove,${AVGSCORE_FILES})
 
 
 ##-----------------------------------------------------------------------------
@@ -228,7 +230,7 @@ remove-from-scores: ${SCORE_FILES_REMOVE}
 remove-from-model-scores: ${MODELSCORE_FILES_REMOVE}
 remove-from-model-lists: ${MODELLIST_FILES_REMOVE}
 remove-translation-files: ${TRANSLATION_FILES_REMOVE}
-remove-eval-files: ${EVAL_FILES_REMOVE}
+remove-eval-files: ${EVAL_FILES_REMOVE} ${EVAL_LOGFILES_REMOVE}
 
 ## replace special tokens (TAB and end-of-string) with the actual character/regex to be matched
 REMOVE_PATTERN_UNESCAPED := $(subst <EOS>,$$,$(subst <TAB>,	,${REMOVE_PATTERN}))
@@ -240,9 +242,10 @@ ifneq (${REMOVE_PATTERN_UNESCAPED},)
 	egrep -v '${REMOVE_PATTERN_UNESCAPED}' < $<.backup > $< || exit 0
 endif
 
-.PHONY: ${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}
-${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE}: %.remove: %
-	rm -f $<
+.PHONY: ${TRANSLATION_FILES_REMOVE} ${EVAL_FILES_REMOVE} ${EVAL_LOGFILES_REMOVE}
+${TRANSLATION_FILES_REMOVE} ${EVAL_LOGFILES_REMOVE} ${EVAL_FILES_REMOVE}:
+	rm -f $(@:.remove=)
+
 
 
 update-model-lists: ${MODELLIST_FILES_UPDATE}
@@ -309,42 +312,29 @@ print-affected-files:
 
 DEVSETS := $(sort $(shell cut -f1 ${SCORE_HOME}/benchmarks.txt | grep dev | grep -v devtest))
 
-.PHONY: remove-devsets
+print-devset-names:
+	@echo ${DEVSETS}
+
 remove-devsets:
-	${MAKE} remove-devset-scores
-	${MAKE} remove-devevalfiles
+	${MAKE} devset-scoredirs.txt
+	${MAKE} remove-all-devset-scores
+	rm -f devset-scoredirs.txt
 
-
-.PHONY: remove-devset-scores
-remove-devset-scores:
-	${MAKE} REMOVE_PATTERN='^($(sort $(subst ${SPACE},|,${DEVSETS})))<TAB>' remove-from-topscores
-	${MAKE} REMOVE_PATTERN='<TAB>($(sort $(subst ${SPACE},|,${DEVSETS})))<TAB>' remove-from-model-scores
-	@for d in ${DEVSETS}; do \
-	  echo "delete $$d"; \
-	  find ${SCORE_HOME}/ -maxdepth 2 -mindepth 1 -name $$d -exec rm -fr {} \; ; \
-	done
-
-
-## remove all evaluation files that belong to development sets
-## and put them into a separate zip file
-
-EVALZIP_DEV := $(patsubst %.zip,%.deveval.zip,${EVAL_ZIPFILES})
-
-.PHONY: remove-devevalfiles
-remove-devevalfiles: ${EVALZIP_DEV}
-
-${EVALZIP_DEV}: %.deveval.zip: %.eval.zip
-	mkdir -p $@.d $<.d
-	cd $<.d && unzip ../${notdir $<}
+devset-scoredirs.txt:
+	rm -f $@
 	for d in ${DEVSETS}; do \
-	  find $<.d -name "$$d.*" -exec mv {} $@.d/ \; ;\
+	  find ../scores -type d -name $$d >> $@; \
 	done
-	if [ `ls $<.d | wc -l` -gt 0 ]; then \
-	  mv $< $<.backup; \
-	  cd ${PWD}/$<.d && find . -name '*.*' | xargs zip ../${notdir $<}; \
-	  cd ${PWD}/$@.d && find . -name '*.*' | xargs zip ../${notdir $@}; \
-	fi
-	rm -fr $<.d $@.d
 
+ifneq ($(wildcard devset-scoredirs.txt),)
+  DEVSET_BENCHMARKS := $(sort $(shell cat devset-scoredirs.txt | cut -f3,4 -d/))
+  DEVSET_BENCHMARKS_REMOVE_TARGET := $(patsubst %,%.removedevset,$(DEVSET_BENCHMARKS))
+endif
 
+remove-all-devset-scores: ${DEVSET_BENCHMARKS_REMOVE_TARGET}
+
+%.removedevset:
+	${MAKE} LANGPAIR=$(firstword $(subst /, ,$(@:.removedevset=))) \
+		BENCHMARK=$(lastword $(subst /, ,$(@:.removedevset=))) \
+	remove
 

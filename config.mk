@@ -14,7 +14,7 @@ include ${MAKEDIR}slurm.mk
 
 LEADERBOARD ?= $(filter %-MT-leaderboard,$(subst /, ,${PWD}))
 METRICS     ?= bleu spbleu chrf chrf++ comet
-
+METRIC      ?= $(firstword ${METRICS})
 
 ## work directory (for the temporary models)
 
@@ -91,6 +91,8 @@ TESTSET_INDEX   := ${OPUSMT_TESTSETS}/index.txt
 
 SCORE_HOME       ?= ${REPOHOME}scores
 MODEL_HOME       ?= ${REPOHOME}models
+SCORE_DB         := ${REPOHOME}models.db
+SCORE_CSV        := ${REPOHOME}models.csv
 MODEL_DIR        := ${MODEL_HOME}/${MODEL}
 MODEL_EVALZIP    := ${MODEL_DIR}.zip
 MODEL_EVALLOGZIP := ${MODEL_DIR}.log.zip
@@ -104,8 +106,17 @@ LEADERBOARD_DIR = ${REPOHOME}scores
 reverse = $(if $(wordlist 2,2,$(1)),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
 
 
+## MODEL_EVAL_URL: location of the storage space for the evaluation output files
+
+STORAGE_BUCKET  := ${LEADERBOARD}
+MODEL_STORAGE   := https://object.pouta.csc.fi/${STORAGE_BUCKET}
+MODEL_EVAL_URL  := ${MODEL_STORAGE}/${MODEL}.eval.zip
+
+
 LEADERBOARD_GITURL = https://raw.githubusercontent.com/Helsinki-NLP/${LEADERBOARD}/master
-MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(notdir ${MODEL_HOME})
+# MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(patsubst $(MODEL_HOME)%,%,${MODEL_DIR})
+# MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(notdir ${MODEL_HOME})
+MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models
 
 
 ## score files with all evaluation results
@@ -114,6 +125,7 @@ MODELSCORE_STORAGE = ${LEADERBOARD_GITURL}/models/$(notdir ${MODEL_HOME})
 ##   - all score files (MODEL_EVAL_SCORES)
 
 MODEL_SCORES        := ${MODEL_DIR}.scores.txt
+MODEL_METRIC_SCORE  := ${MODEL_DIR}.${METRIC}-scores.txt
 MODEL_METRIC_SCORES := $(patsubst %,${MODEL_DIR}.%-scores.txt,${METRICS})
 MODEL_EVAL_SCORES   := ${MODEL_SCORES} ${MODEL_METRIC_SCORES}
 
@@ -145,8 +157,11 @@ ifdef LANGPAIRDIR
   LANGPAIR = $(lastword $(subst /, ,${LANGPAIRDIR}))
 endif
 
+## NOTE that filtering becomes really slow if
+## both ALL_LANGPAIRS and MODEL_LANGPAIRS are many!
+
 ALL_LANGPAIRS := $(shell cut -f1 ${LANGPAIR_TO_TESTSETS})
-LANGPAIRS     := ${sort $(filter ${ALL_LANGPAIRS},${MODEL_LANGPAIRS})}
+LANGPAIRS     := ${sort $(filter ${MODEL_LANGPAIRS},${ALL_LANGPAIRS})}
 LANGPAIR      ?= ${firstword ${LANGPAIRS}}
 LANGPAIRSTR   := ${LANGPAIR}
 SRC           := ${firstword ${subst -, ,${LANGPAIR}}}
@@ -206,19 +221,22 @@ endif
 ## store available benchmarks for this model in a file
 ## --> problem: this will be outdated if new benchmarks appear!
 
-ifdef MODEL
+
+ifneq (${MODEL},)
 
 ifneq ($(wildcard $(dir ${MODEL_DIR})),)
 ifeq ($(wildcard ${MODEL_TESTSETS}),)
-  MAKE_BENCHMARK_FILE := $(foreach lp,${LANGPAIRS},\
-	$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
+  MAKE_BENCHMARK_FILE := \
+	$(foreach lp,${LANGPAIRS},\
+	$(shell mkdir -p $(dir ${MODEL_TESTSETS}) && \
+		grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 		cut -f2 | tr ' ' "\n" | \
 		sed 's|^|${lp}/|' >> ${MODEL_TESTSETS}))
 endif
 endif
 
 AVAILABLE_BENCHMARKS := $(sort $(shell if [ -e ${MODEL_TESTSETS} ]; then cut -f1 ${MODEL_TESTSETS}; fi))
-TESTED_BENCHMARKS    := $(sort $(shell if [ -e ${MODEL_SCORES} ]; then cut -f1,2 ${MODEL_SCORES} | tr "\t" '/'; fi))
+TESTED_BENCHMARKS    := $(sort $(shell if [ -e ${MODEL_METRIC_SCORE} ]; then cut -f1,2 ${MODEL_METRIC_SCORE} | tr "\t" '/'; fi))
 MISSING_BENCHMARKS   := $(filter-out ${TESTED_BENCHMARKS},${AVAILABLE_BENCHMARKS})
 
 
@@ -232,9 +250,10 @@ endif
 
 .INTERMEDIATE: ${SYSTEM_INPUT}
 
-TRANSLATED_BENCHMARKS := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.compare,${TESTSETS})
-EVALUATED_BENCHMARKS  := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.eval,${TESTSETS})
-BENCHMARK_SCORE_FILES := $(foreach m,${METRICS},${MODEL_DIR}/${TESTSET}.${LANGPAIR}.${m})
+TRANSLATED_BENCHMARKS    := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.compare,${TESTSETS})
+EVALUATED_BENCHMARKS     := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.eval,${TESTSETS})
+# EVALUATED_BENCHMARKS     := $(patsubst %,${MODEL_DIR}/%.${LANGPAIR}.evalfiles.zip,${TESTSETS})
+BENCHMARK_SCORE_FILES    := $(foreach m,${METRICS},${MODEL_DIR}/${TESTSET}.${LANGPAIR}.${m})
 
 ## don't delete those files when used in implicit rules
 .NOTINTERMEDIATE: ${TRANSLATED_BENCHMARKS} ${EVALUATED_BENCHMARKS} ${BENCHMARK_SCORE_FILES}

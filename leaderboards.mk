@@ -2,6 +2,8 @@
 #
 # recipes for updating and maintaining leaderboard files
 #
+#
+
 
 METRICS ?= bleu spbleu chrf chrf++ comet
 METRIC  ?= $(firstword ${METRICS})
@@ -10,6 +12,8 @@ ifdef LANGPAIRDIR
   LANGPAIR := $(lastword $(subst /, ,${LANGPAIRDIR}))
 endif
 
+
+MAKEDIR  := $(dir $(lastword ${MAKEFILE_LIST}))
 
 ## SCORE_DIRS   = directories that contains new scores
 ## LEADERBOARDS = list of leader boards that need to be updated
@@ -34,8 +38,7 @@ LEADERBOARDS := $(foreach m,${METRICS},$(patsubst %,%/$(m)-scores.txt,${SCORE_DI
 
 LANGPAIR_LISTS  := scores/langpairs.txt
 BENCHMARK_LISTS := scores/benchmarks.txt
-
-
+MODEL_LIST      := models/modelsize.txt
 
 
 #--------------------------------------------------
@@ -78,7 +81,8 @@ update-leaderboards: ${LEADERBOARDS}
 .PHONY: updated-leaderboards
 updated-leaderboards:
 	${MAKE} UPDATED_LEADERBOARDS=1 update-leaderboards
-	${MAKE} UPDATED_LEADERBOARDS=1 all-topavg-scores
+	${MAKE} all-topavg-scores
+#	${MAKE} UPDATED_LEADERBOARDS=1 all-topavg-scores
 
 
 
@@ -119,10 +123,30 @@ model-lists: $(foreach l,${LANGPAIRS},scores/${l}/model-list.txt)
 
 
 scores/%/model-list.txt:
-	find ${dir $@} -mindepth 2 -name '*-scores.txt' | xargs cut -f2 | sort -u > $@
+	find ${dir $@} -mindepth 2 -name '*-scores.txt' | \
+	xargs cut -f2 | sed 's|https*://[^/]*/||' | sed 's|.zip$$||' | sort -u > $@
+#	@git add $@
 
 released-models.txt: scores
 	find scores -name 'bleu-scores.txt' | xargs cat | cut -f2 | sort -u > $@
+#	@git add $@
+
+release-history.txt: released-models.txt
+	cat $< | rev | cut -f3 -d'/' | rev > $@.pkg
+	cat $< | rev | cut -f2 -d'/' | rev > $@.langpair
+	cat $< | rev | cut -f1 -d'/' | rev > $@.model
+	cat $< | sed 's/^.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)\.zip$$/\1/' > $@.date
+	paste $@.date $@.pkg $@.langpair $@.model | sort -r | sed 's/\.zip$$//' > $@
+	rm -f $@.langpair $@.model $@.date $@.pkg
+#	@git add $@
+
+
+${MODEL_LIST}: models
+	find models -name '*.info' \
+	| xargs grep parameters  \
+	| sed 's|^models/||;s/\.info:/:/' \
+	| tr ':' "\t" > $@
+
 
 release-history.txt: released-models.txt
 	cat $< | rev | cut -f3 -d'/' | rev > $@.pkg
@@ -163,10 +187,12 @@ avg-langpair-scores: $(foreach l,${LANGPAIRS},scores/${l}/avg-${METRIC}-scores.t
 scores/${LANGPAIR}/avg-%-scores.txt: scores/${LANGPAIR}/model-list.txt
 	@echo "update $@"
 	@${MAKEDIR}tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
+#	@git add $@
 
 scores/%/avg-${METRIC}-scores.txt: scores/%/model-list.txt
 	@echo "update $@"
 	@${MAKEDIR}tools/average-scores.pl $(sort $(wildcard $(dir $@)*/$(patsubst avg-%,%,$(notdir $@)))) > $@
+#	@git add $@
 
 
 scores/${LANGPAIR}/top-%-scores.txt: scores/${LANGPAIR}/model-list.txt
@@ -179,6 +205,7 @@ scores/${LANGPAIR}/top-%-scores.txt: scores/${LANGPAIR}/model-list.txt
 	    head -1 $$f           >> $@; \
 	  fi \
 	done
+#	@git add $@
 
 .NOTINTERMEDIATE: scores/%/model-list.txt
 
@@ -192,6 +219,7 @@ scores/%/top-${METRIC}-scores.txt: scores/%/model-list.txt
 	    head -1 $$f           >> $@; \
 	  fi \
 	done
+#	@git add $@
 
 
 ${LEADERBOARDS}: ${SCORE_DIRS}
@@ -203,7 +231,7 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 	    cat $(wildcard ${@:.txt=}*.unsorted.txt) | \
 	    grep '^[0-9\-]' | sort -k2,2 -k1,1nr            > $@.new.txt; \
 	    sort -m $@.new.txt $@.old.txt |\
-	    uniq -f1 | sort -k1,1nr -u                      > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr            > $@.sorted; \
 	    rm -f $@.old.txt $@.new.txt; \
 	    rm -f $(wildcard ${@:.txt=}*.unsorted.txt); \
 	    mv $@.sorted $@; \
@@ -211,25 +239,26 @@ ${LEADERBOARDS}: ${SCORE_DIRS}
 	  fi; \
 	else \
 	  if [ $(words $(wildcard ${@:.txt=}*.txt)) -gt 0 ]; then \
-	    echo "merge and sort ${patsubst scores/%,%,$@}"; \
+	    echo "sort ${patsubst scores/%,%,$@}"; \
 	    cat $(wildcard ${@:.txt=}*.txt) | grep '^[0-9\-]' |\
-	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr -u > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr             > $@.sorted; \
 	    rm -f $(wildcard ${@:.txt=}*.txt); \
 	    mv $@.sorted $@; \
 	    rm -f $(dir $<)model-list.txt; \
 	  fi; \
 	fi
+#	@git add $@
 
 scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	@echo "update $@"
-	@if [ -e $@ ]; then \
+	if [ -e $@ ]; then \
 	  if [ $(words $(wildcard ${@:.txt=}*.unsorted.txt)) -gt 0 ]; then \
 	    echo "merge and sort ${patsubst scores/%,%,$@}"; \
 	    sort -k2,2 -k1,1nr $@                           > $@.old.txt; \
 	    cat $(wildcard ${@:.txt=}*.unsorted.txt) | \
 	    grep '^[0-9\-]' | sort -k2,2 -k1,1nr            > $@.new.txt; \
 	    sort -m $@.new.txt $@.old.txt |\
-	    uniq -f1 | sort -k1,1nr -u                      > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr            > $@.sorted; \
 	    rm -f $@.old.txt $@.new.txt; \
 	    rm -f $(wildcard ${@:.txt=}*.unsorted.txt); \
 	    mv $@.sorted $@; \
@@ -237,22 +266,23 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 	  fi; \
 	else \
 	  if [ $(words $(wildcard ${@:.txt=}*.txt)) -gt 0 ]; then \
-	    echo "merge and sort ${patsubst scores/%,%,$@}"; \
+	    echo "sort ${patsubst scores/%,%,$@}"; \
 	    cat $(wildcard ${@:.txt=}*.txt) | grep '^[0-9\-]' |\
-	    sort -k2,2 -k1,1nr | uniq -f1 | sort -k1,1nr -u > $@.sorted; \
+	    sort -k2,2 | uniq -f1 | sort -k1,1nr            > $@.sorted; \
 	    rm -f $(wildcard ${@:.txt=}*.txt); \
 	    mv $@.sorted $@; \
 	    rm -f $(dir $<)model-list.txt; \
 	  fi; \
 	fi
-
+#	@git add $@
 
 
 
 
 
 %/langpairs.txt: %
-	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}##' | sort > $@
+	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}/##' | sort > $@
+#	@git add $@
 
 ## printf does not exist on Mac OS
 #	find $(dir $@) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort > $@
@@ -268,7 +298,7 @@ scores/benchmarks.txt: scores
 	  echo "" >> $@; \
 	done
 	rm -f $@.tmp
-
+#	@git add $@
 
 ## this is too slow:
 ##

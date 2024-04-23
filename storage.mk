@@ -1,15 +1,10 @@
 # -*-makefile-*-
 
 
-MODEL_HOME      ?= ${PWD}
-
 ## MODEL_URL: location of the public model (to be stored in the score files)
-## MODEL_EVAL_URL: location of the storage space for the evaluation output files
 
+MODEL_HOME      ?= ${PWD}
 MODEL_URL       := https://location.of.my.model/storage/${MODEL}
-STORAGE_BUCKET  := ${LEADERBOARD}
-MODEL_STORAGE   := https://object.pouta.csc.fi/${STORAGE_BUCKET}
-MODEL_EVAL_URL  := ${MODEL_STORAGE}/${MODEL}.eval.zip
 
 
 ## scores that need to be registered (stored in temporary score files)
@@ -35,7 +30,22 @@ endif
 MODEL_EVALZIPS  ?= $(patsubst %,%.eval.zip,$(sort $(basename ${SCOREFILES:.txt=})))
 
 
+git-add-evalfiles: git-add-output git-add-eval git-add-zip
 
+.PHONY: git-add-output
+git-add-output:
+	git ls-files --others --exclude-standard | \
+	grep '\.output$$' | xargs git add
+
+.PHONY: git-add-eval
+git-add-eval:
+	git ls-files --others --exclude-standard | \
+	grep '\.eval$$' | xargs git add
+
+.PHONY: git-add-zip
+git-add-zip:
+	git ls-files --others --exclude-standard | \
+	grep '\.zip$$' | grep -v '\.eval\.zip' | xargs git add
 
 
 .PHONY: upload upload-eval-files

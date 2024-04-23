@@ -4,12 +4,12 @@
 
 SCOREFILES_VALIDATED = $(patsubst %,%.validated,${SCOREFILES})
 
-validate-all-scorefiles:
+validate-all-model-scorefiles:
 	for s in ${ALL_SOURCES}; do \
-	  ${MAKE} SOURCE=$$s ALL_MODELS=1 validate-scorefiles; \
+	  ${MAKE} SOURCE=$$s ALL_MODELS=1 validate-model-scorefiles; \
 	done
 
-validate-scorefiles: ${SCOREFILES_VALIDATED}
+validate-model-scorefiles: ${SCOREFILES_VALIDATED}
 
 ${SCOREFILES_VALIDATED}: %.validated: %
 	@if [ `sort -u $< | wc -l` != `cat $< | wc -l` ]; then \
@@ -18,6 +18,17 @@ ${SCOREFILES_VALIDATED}: %.validated: %
 	  sort -u $@ > $<; \
 	fi
 	@touch $@
+
+
+## remove scores for the same model
+## rom leaderboard files
+## DANGER: if this fails it overwrites files
+
+remove-all-duplicated-scores:
+	find ${REPOHOME}scores -name '*-scores.txt' \
+		-not -name 'top-*' -not -name 'avg-*' -exec uniq -f1 {} {}.new \;
+	find ${REPOHOME}scores -name '*-scores.txt' \
+		-not -name 'top-*' -not -name 'avg-*' -exec mv {}.new {} \;
 
 
 benchmark-info:

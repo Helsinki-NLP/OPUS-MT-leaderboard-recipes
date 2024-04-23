@@ -78,7 +78,8 @@ foreach my $b (sort {scalar keys %{$benchmarks{$b}} <=> scalar keys %{$benchmark
 }
 
 unless (keys %selection_score){
-    die "no benchmark selected - strange!\n";
+    print STDERR "no benchmark selected - strange!\n";
+    exit 0;
 }
 
 my ($best_set) = sort {$selection_score{$b} <=> $selection_score{$a}} keys %selection_score;

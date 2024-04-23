@@ -3,6 +3,7 @@
 
 .PHONY: print-model-info
 print-model-info: ${MODEL_TESTSETS}
+	@echo ${MODEL_TESTSETS}
 	@echo "${MODEL_URL}"
 	@echo "${MODEL_DIST}"
 	@echo "${MODEL}"
@@ -86,10 +87,16 @@ eval-model-files: ${MODEL_EVAL_SCORES}
 
 .PHONY: update-eval-files
 update-eval-files:
-	if [ -e ${MODEL_SCORES} ]; then \
-	  mv -f ${MODEL_SCORES} ${MODEL_SCORES}.${TODAY}; \
+	@if [ -d ${MODEL_DIR} ]; then \
+	  find ${MODEL_DIR} -name '*.bleu' -empty -delete; \
+	  if [ -e ${MODEL_SCORES} ]; then \
+	    if [ `find ${MODEL_DIR} -name '*.bleu' | wc -l` -gt `cat ${MODEL_SCORES} | wc -l` ]; then \
+	      echo "move $(notdir ${MODEL_SCORES}) to $(notdir ${MODEL_SCORES}.${TODAY})"; \
+	      mv -f ${MODEL_SCORES} ${MODEL_SCORES}.${TODAY}; \
+	    fi \
+	  fi \
 	fi
-	${MAKE} eval-model-files
+	${MAKE} SKIP_NEW_EVALUATION=1 eval-model-files
 
 
 ## new way of evaluating missing benchmarks
@@ -100,9 +107,10 @@ eval-model: ${MODEL_TESTSETS}
 	@echo ".... evaluate ${MODEL}"
 ifneq (${MISSING_BENCHMARKS},)
 	${MAKE} fetch
+	${MAKE} update-eval-files
 	${MAKE} eval-missing-benchmarks
 	${MAKE} cleanup
-	${MAKE} SKIP_NEW_EVALUATION=1 ${MODEL_EVAL_SCORES}; \
+	${MAKE} update-eval-files
 	${MAKE} pack-model-scores
 else
 	@echo ".... nothing is missing"
@@ -122,12 +130,14 @@ ${MISSING_BENCHMARKS}:
 get-available-benchmarks: ${MODEL_TESTSETS}
 
 ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
+	mkdir -p $(dir $@)
 	rm -f $@
 	@l=$(foreach lp,${LANGPAIRS},\
 		$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 			cut -f2 | tr ' ' "\n" | \
 			sed 's|^|${lp}/|' >> $@))
 	@echo "available testsets stored in $@"
+#	-git add $@
 
 
 
@@ -169,9 +179,10 @@ ${TRANSLATED_BENCHMARK}: ${SYSTEM_OUTPUT}
 	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
 	fi
 
-.NOTINTERMEDIATE: %.output
+.NOTINTERMEDIATE: %.output %.eval
 
-${EVALUATED_BENCHMARKS}: %.eval: %.output
+# ${EVALUATED_BENCHMARKS}: %.eval: %.output
+%.eval: %.output
 	${MAKE} $(@:.eval=.compare)
 	${MAKE} $(patsubst %,$(basename $@).%,${METRICS})
 	@for m in ${METRICS}; do \
@@ -208,18 +219,47 @@ endif
 		${MODEL_DIR}/%.${LANGPAIR}.comet
 
 
+## NEW: zipfiles with all logfiles from individual benchmarks
+
+ifdef CREATE_BENCHMARK_EVALZIP_FILES
+
+BENCHMARK_EVALZIP_FILES = $(patsubst %.eval,%.evalfiles.zip,$(shell find . -type f -name '*.eval'))
+create_benchmark_evalzip_files: ${BENCHMARK_EVALZIP_FILES}
+
+endif
+
+
+%.evalfiles.zip: # %.eval
+	-if [ -e $(patsubst %/,%.zip,$(dir $@)) ]; then \
+	  unzip -n $(patsubst %/,%.zip,$(dir $@)) '$(notdir $(@:.evalfiles.zip=.*))' -d $(dir $@); \
+	fi
+	-if [ -e $(patsubst %/,%.log.zip,$(dir $@)) ]; then \
+	  unzip -n $(patsubst %/,%.log.zip,$(dir $@)) '$(notdir $(@:.evalfiles.zip=.*))' -d $(dir $@); \
+	fi
+	-if [ -e $(patsubst %/,%.eval.zip,$(dir $@)) ]; then \
+	  unzip -n $(patsubst %/,%.eval.zip,$(dir $@)) '$(notdir $(@:.evalfiles.zip=.*))' -d $(dir $@); \
+	fi
+	cd $(dir $@) && \
+	find . -type f -name '$(notdir $(@:.evalfiles.zip=.*))' \
+		-not -name '*.zip' -not -name '*.compare' -not -name '*.output' |\
+	xargs zip $(notdir $@)
+	find . -type f -name '$(notdir $(@:.evalfiles.zip=.*))' \
+		-not -name '*.zip' -not -name '*.compare' -not -name '*.output' -not -name '*.eval' -delete
+
+
+
 ${MODEL_DIR}/%.${LANGPAIR}.spbleu: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@echo "... create ${MODEL}/$(notdir $@)"
 	@mkdir -p ${dir $@}
 	@sed -n '3~4p' $< > $@.hyp
-	@cat $@.hyp | sacrebleu -f text --metrics=bleu --tokenize flores200 ${TESTSET_REFS} > $@
+	cat $@.hyp | sacrebleu -f text --metrics=bleu --tokenize flores200 ${TESTSET_REFS} > $@  || rm -f $@
 	@rm -f $@.hyp
 
 ${MODEL_DIR}/%.${LANGPAIR}.bleu: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@echo "... create ${MODEL}/$(notdir $@)"
 	@mkdir -p ${dir $@}
 	@sed -n '3~4p' $< > $@.hyp
-	@cat $@.hyp | sacrebleu -f text --metrics=bleu ${TESTSET_REFS} > $@
+	cat $@.hyp | sacrebleu -f text --metrics=bleu ${TESTSET_REFS} > $@ || rm -f $@
 	@rm -f $@.hyp
 
 ${MODEL_DIR}/%.${LANGPAIR}.chrf: ${MODEL_DIR}/%.${LANGPAIR}.compare
@@ -237,7 +277,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.chrf++: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@sed -n '3~4p' $< > $@.hyp
 	@cat $@.hyp | \
 	sacrebleu -f text ${SACREBLEU_PARAMS} --metrics=chrf --width=3 --chrf-word-order 2 ${TESTSET_REFS} |\
-	perl -pe 'unless (/version\:1\./){@a=split(/\s+/);$$a[-1]/=100;$$_=join(" ",@a)."\n";}' > $@
+	perl -pe 'unless (/version\:1\./){@a=split(/\s+/);$$a[-1]/=100;$$_=join(" ",@a)."\n";}' > $@  || rm -f $@
 	@rm -f $@.hyp
 
 ${MODEL_DIR}/%.${LANGPAIR}.ter: ${MODEL_DIR}/%.${LANGPAIR}.compare
@@ -245,7 +285,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.ter: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@mkdir -p ${dir $@}
 	@sed -n '3~4p' $< > $@.hyp
 	@cat $@.hyp | \
-	sacrebleu -f text ${SACREBLEU_PARAMS} --metrics=ter ${TESTSET_REFS} > $@
+	sacrebleu -f text ${SACREBLEU_PARAMS} --metrics=ter ${TESTSET_REFS} > $@  || rm -f $@
 	@rm -f $@.hyp
 
 
@@ -263,7 +303,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.comet: ${MODEL_DIR}/%.${LANGPAIR}.compare
 	@sed -n '2~4p' $< > $@.ref
 	@sed -n '3~4p' $< > $@.hyp
 	@${LOAD_COMET_ENV} ${COMET_SCORE} ${COMET_PARAM} \
-		-s $@.src -r $@.ref -t $@.hyp | cut -f2,3 > $@
+		-s $@.src -r $@.ref -t $@.hyp | cut -f2,3 > $@  || rm -f $@
 	@rm -f $@.src $@.ref $@.hyp
 
 
@@ -283,6 +323,7 @@ ${MODEL_DIR}/%.${LANGPAIR}.comet: ${MODEL_DIR}/%.${LANGPAIR}.compare
 #	  grep -H BLEU ${MODEL_DIR}/*.bleu | sed 's/.bleu//' | sort          > $@.bleu; \
 #	  grep -H chrF ${MODEL_DIR}/*.chrf | sed 's/.chrf//' | sort          > $@.chrf;
 
+model-scores: ${MODEL_SCORES}
 
 ${MODEL_SCORES}: ${TESTSET_INDEX} ${TESTSET_FILES}
 ifndef SKIP_OLD_EVALUATION
@@ -296,11 +337,12 @@ ifndef SKIP_NEW_EVALUATION
 	${MAKE} eval-langpairs
 	${MAKE} cleanup
 endif
-	@echo "... create ${MODEL}/$(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
-	  echo "... create ${MODEL_SCORES}"; \
-	  find ${MODEL_DIR} -name '*.bleu' | xargs grep -H BLEU | sed 's/.bleu//' | sort > $@.bleu; \
-	  find ${MODEL_DIR} -name '*.chrf' | xargs grep -H chrF | sed 's/.chrf//' | sort > $@.chrf; \
+	  echo "... create $(notdir $@)"; \
+	  find ${MODEL_DIR} -name '*.bleu' | xargs grep -H BLEU | \
+		grep -v 'tok:flores' | sed 's/.bleu//' | sort -t: -k1,1      > $@.bleu; \
+	  find ${MODEL_DIR} -name '*.chrf' | xargs grep -H chrF | \
+		sed 's/.chrf//' | sort -t: -k1,1                             > $@.chrf; \
 	  join -t: -j1 $@.bleu $@.chrf                                       > $@.bleu-chrf; \
 	  cut -f1 -d: $@.bleu-chrf | rev | cut -f1 -d. | rev                 > $@.langs; \
 	  cut -f1 -d: $@.bleu-chrf | rev | cut -f1 -d/ | cut -f2- -d. | rev  > $@.testsets; \
@@ -336,9 +378,13 @@ endif
 ## (works for all sacrebleu results but not for other metrics)
 ##-------------------------------------------------
 ##
+## TODO: merge with existing one instead of overwriting and making all from scratch
+##       --> necessary if we don't unpack all existing scores!
+##       --> the same applies for the comet-scores below
+##
 
 ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
-	@echo "... create ${MODEL}/$(notdir $@)"
+	@echo "... create $(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
 	  mkdir -p $(dir $@); \
 	  find ${MODEL_DIR} -name '*.$(patsubst ${MODEL_DIR}.%-scores.txt,%,$@)' | xargs grep -H . > $@.all; \
@@ -349,7 +395,7 @@ ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
 	  cat $@ |\
 	  sed -e 's/\(news.*[0-9][0-9][0-9][0-9]\)-[a-z][a-z][a-z][a-z]	/\1	/' |  \
 	  sed -e 's/\(news.*2021\)\.[a-z][a-z]\-[a-z][a-z]	/\1	/' |\
-	  rev | sort | uniq -f1 | rev | sort                                  > $@.sorted; \
+	  rev | sort | uniq -f1 | rev | sort -u                                > $@.sorted; \
 	  mv -f $@.sorted $@; \
 	  rm -f $@.all $@.langs $@.testsets $@.scores; \
 	fi
@@ -358,7 +404,7 @@ ${MODEL_DIR}.%-scores.txt: ${MODEL_SCORES}
 ## specific recipe for COMET scores
 
 ${MODEL_DIR}.comet-scores.txt: ${MODEL_SCORES}
-	@echo "... create ${MODEL}/$(notdir $@)"
+	@echo "... create $(notdir $@)"
 	@if [ -d ${MODEL_DIR} ]; then \
 	  mkdir -p $(dir $@); \
 	  find ${MODEL_DIR} -name '*.comet' | xargs grep -H '^score:' | sort > $@.comet; \
@@ -369,7 +415,7 @@ ${MODEL_DIR}.comet-scores.txt: ${MODEL_SCORES}
 	  cat $@ |\
 	  sed -e 's/\(news.*[0-9][0-9][0-9][0-9]\)-[a-z][a-z][a-z][a-z]	/\1	/' |  \
 	  sed -e 's/\(news.*2021\)\.[a-z][a-z]\-[a-z][a-z]	/\1	/' |\
-	  rev | sort -u | uniq -f1 | rev | sort                           > $@.sorted; \
+	  rev | sort -u | uniq -f1 | rev | sort -u                        > $@.sorted; \
 	  mv -f $@.sorted $@; \
 	  rm -f $@.comet $@.langs $@.testsets $@.comet-scores; \
 	fi
@@ -406,8 +452,9 @@ ${MODEL_DIR}/.scores:
 
 .PHONY: pack-model-scores
 pack-model-scores: ${MODEL_EVALALLZIP} ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
-	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.eval' -delete
+	find ${MODEL_DIR} -type f -not -name '*.output' -not -name '*.zip' -not -name '*.eval' -delete
 	rm -f ${MODEL_DIR}/.scores
+#	-git add ${MODEL_EVALZIP} ${MODEL_EVALLOGZIP} ${MODEL_DIR}.logfiles
 
 ${MODEL_EVALALLZIP}: ${MODEL_DIR}
 	cd ${MODEL_DIR} && find . -type f | xargs zip $@
@@ -426,7 +473,7 @@ ${MODEL_EVALZIP}: ${MODEL_DIR}
 
 .NOTINTERMIEDIATE: %.log.zip
 %.logfiles: %.log.zip
-	zipinfo -1 $< > $@
+	-zipinfo -1 $< > $@
 
 
 MODEL_PACK_EVAL := ${patsubst %,%.pack,${MODELS}}
