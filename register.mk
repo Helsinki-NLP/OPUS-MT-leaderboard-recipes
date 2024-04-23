@@ -91,20 +91,55 @@ ${SCOREFILES_VALIDATED}: %.validated: %
 score-db: ${SCORE_DB}
 
 ${SCORE_DB}: ${SCORE_CSV}
-	echo "create table scores (\
+	if [ -e $@ ]; then \
+	  echo "create table scores (\
+		metric TEXT NOT NULL, \
 		model TEXT NOT NULL, \
 		langpair TEXT NOT NULL, \
 		testset TEXT NOT NULL, \
 		score NUMERIC, \
-		PRIMARY KEY (model, langpair, testset) \
-		);" | \
-	sqlite3 $@
+		PRIMARY KEY (model, langpair, testset, metric) \
+		);" | sqlite3 $@; \
+	fi
 	echo ".import --csv $< scores" | sqlite3 $@
 
 ${SCORE_CSV}: ${MODEL_HOME}
-	find $< -name '*.${METRIC}-scores.txt' | \
-	xargs grep -H . | tr ':' "\t" | \
-	sed 's|$</||' | sed 's|.${METRIC}-scores.txt||' |\
-	tr "\t" ',' > $@
+	rm -f $@
+	for m in ${METRICS}; do \
+	  echo "add scores for '$$m'"; \
+	  find $< -name "*.$$m-scores.txt" | \
+	  xargs grep -H . \
+	  | tr ':' "\t" \
+	  | sed "s|$</||" \
+	  | sed 's|.${METRIC}-scores.txt||' \
+	  | sed "s/^/$$m	/" \
+	  | tr "\t" ',' >> $@; \
+	done
+
+
+
+# open sqlite3 cli
+# (see https://sqlite.org/cli.html)
+
+
+# create table scores ('model' TEXT, 'langpair' TEXT, testset TEXT, 'score' NUMERIC);
+# .import --csv table.csv scores
+
+
+# select * from scores;
+# select * from scores where metric='bleu' and score>30;
+# select * from scores where metric='bleu' and langpair like "eng-%";
+
+
+# select max values per test set for a given langpair:
+
+# select model,langpair,testset,max(score) from scores where metric='bleu' and langpair='eng-deu' group by testset;
+# select model,langpair,testset,max(score) from scores where metric='bleu' group by testset, langpair;
+# select model,langpair,testset,max(score) from scores where metric='bleu' group by testset;
+
+
+# select from a test set with descending scores:
+
+# select * from scores where metric='bleu' langpair='eng-deu' and testset='generaltest2022' order by score DESC;
 
 
