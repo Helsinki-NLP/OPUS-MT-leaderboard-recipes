@@ -88,34 +88,65 @@ ${SCOREFILES_VALIDATED}: %.validated: %
 
 
 
+
+# ${SCORE_DB}: ${SCORE_CSV}
+# 	if [ ! -e $@ ]; then \
+# 	  echo "create table scores (\
+# 		metric TEXT NOT NULL, \
+# 		model TEXT NOT NULL, \
+# 		langpair TEXT NOT NULL, \
+# 		testset TEXT NOT NULL, \
+# 		score NUMERIC, \
+# 		PRIMARY KEY (model, langpair, testset, metric) \
+# 		);" | sqlite3 $@; \
+# 	fi
+# 	date > ${@:.db=.date}
+# 	echo ".import --csv $< scores" | sqlite3 $@
+
+# ${SCORE_CSV}: ${MODEL_HOME}
+# 	@rm -f $@
+# 	@for m in ${METRICS}; do \
+# 	  echo "find all $$m scores"; \
+# 	  find $< -name "*.$$m-scores.txt" | \
+# 	  xargs grep -H . \
+# 	  | tr ':' "\t" \
+# 	  | sed "s|$</||" \
+# 	  | sed "s|.$$m-scores.txt||" \
+# 	  | sed "s/^/$$m	/" \
+# 	  | tr "\t" ',' >> $@; \
+# 	done
+
+
+## create individual databases for each metric
+
+all-score-dbs:
+	for m in ${METRICS}; do \
+	  ${MAKE} METRIC=$$m score-db; \
+	done
+
 score-db: ${SCORE_DB}
 
 ${SCORE_DB}: ${SCORE_CSV}
 	if [ ! -e $@ ]; then \
 	  echo "create table scores (\
-		metric TEXT NOT NULL, \
 		model TEXT NOT NULL, \
 		langpair TEXT NOT NULL, \
 		testset TEXT NOT NULL, \
 		score NUMERIC, \
-		PRIMARY KEY (model, langpair, testset, metric) \
+		PRIMARY KEY (model, langpair, testset) \
 		);" | sqlite3 $@; \
 	fi
-	date > ${@:.db=.date}
 	echo ".import --csv $< scores" | sqlite3 $@
+	date > ${@:.db=.date}
 
 ${SCORE_CSV}: ${MODEL_HOME}
 	@rm -f $@
-	@for m in ${METRICS}; do \
-	  echo "find all $$m scores"; \
-	  find $< -name "*.$$m-scores.txt" | \
-	  xargs grep -H . \
-	  | tr ':' "\t" \
-	  | sed "s|$</||" \
-	  | sed "s|.$$m-scores.txt||" \
-	  | sed "s/^/$$m	/" \
-	  | tr "\t" ',' >> $@; \
-	done
+	find $< -name '*.${METRIC}-scores.txt' \
+	| xargs grep -H . \
+	| tr ':' "\t" \
+	| sed 's|$</||' \
+	| sed 's|.${METRIC}-scores.txt||' \
+	| tr "\t" ',' >> $@
 
 
 
@@ -128,19 +159,19 @@ ${SCORE_CSV}: ${MODEL_HOME}
 
 
 # select * from scores;
-# select * from scores where metric='bleu' and score>30;
-# select * from scores where metric='bleu' and langpair like "eng-%";
+# select * from scores where score>30;
+# select * from scores where langpair like "eng-%";
 
 
 # select max values per test set for a given langpair:
 
-# select model,langpair,testset,max(score) from scores where metric='bleu' and langpair='eng-deu' group by testset;
-# select model,langpair,testset,max(score) from scores where metric='bleu' group by testset, langpair;
-# select model,langpair,testset,max(score) from scores where metric='bleu' group by testset;
+# select model,langpair,testset,max(score) from scores where langpair='eng-deu' group by testset;
+# select model,langpair,testset,max(score) from scores group by testset, langpair;
+# select model,langpair,testset,max(score) from scores group by testset;
 
 
 # select from a test set with descending scores:
 
-# select * from scores where metric='bleu' langpair='eng-deu' and testset='generaltest2022' order by score DESC;
+# select * from scores where langpair='eng-deu' and testset='generaltest2022' order by score DESC;
 
 
