@@ -137,7 +137,7 @@ ${SCORE_DB}: ${SCORE_CSV}
 		);" | sqlite3 $@; \
 	fi
 	echo ".import --csv $< scores" | sqlite3 $@
-	date > ${@:.db=.date}
+	date +%F > ${@:.db=.date}
 
 ${SCORE_CSV}: ${MODEL_HOME}
 	@rm -f $@
