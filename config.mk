@@ -100,10 +100,9 @@ MODEL_TESTSETS   := ${MODEL_DIR}.testsets.tsv
 
 LEADERBOARD_DIR = ${REPOHOME}scores
 
-# SCORE_DB         := ${REPOHOME}models.db
-# SCORE_CSV        := ${REPOHOME}models.csv
-SCORE_DB         := ${LEADERBOARD_DIR}/${METRIC}_scores.db
-SCORE_CSV        := ${LEADERBOARD_DIR}/${METRIC}_scores.csv
+SCORE_DB       := ${LEADERBOARD_DIR}/${METRIC}_scores.db
+SCORE_CSV      := ${LEADERBOARD_DIR}/${METRIC}_scores.csv
+SCORE_DBS      := $(foreach m,${METRICS},${LEADERBOARD_DIR}/${m}_scores.db)
 
 
 ## convenient function to reverse a list

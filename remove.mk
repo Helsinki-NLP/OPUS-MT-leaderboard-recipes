@@ -155,12 +155,47 @@ endif
 endif
 
 
+
+##-----------------------------------------------------------------------------
+## remove rows from all sqlite score databases
+## that match the DELETE_CONDITION
+##-----------------------------------------------------------------------------
+
+remove-from-db:
+ifneq (${DELETE_CONDITION},)
+	@for d in $(patsubst %.db,%,${SCORE_DBS}); do \
+	  if [ -e $$d.db ]; then \
+	    echo "echo \"delete from scores where ${DELETE_CONDITION}\" | sqlite3 $$d.db"; \
+	    echo "delete from scores where ${DELETE_CONDITION}" | sqlite3 $$d.db; \
+	    date +%F > $$d.date; \
+	  fi \
+	done
+endif
+
+remove-model-from-db:
+	@${MAKE} DELETE_CONDITION="model='${MODEL}'" remove-from-db
+
+remove-benchmark-from-db:
+	@${MAKE} DELETE_CONDITION="testset='${BENCHMARK}'" remove-from-db
+
+remove-langpair-benchmark-from-db:
+	@${MAKE} DELETE_CONDITION="langpair='${LANGPAIR}' and testset='${BENCHMARK}'" remove-from-db
+
+remove-benchmark-from-model-from-db:
+	@${MAKE} DELETE_CONDITION="model='${MODEL}' and testset='${BENCHMARK}'" remove-from-db
+
+remove-langpair-benchmark-from-model-from-db:
+	@${MAKE} DELETE_CONDITION="model='${MODEL}' and langpair='${LANGPAIR}' and testset='${BENCHMARK}'" remove-from-db
+
+
+
+
 ##-----------------------------------------------------------------------------
 ## remove all info about a specific model
 ##-----------------------------------------------------------------------------
 
 .PHONY: remove-model
-remove-model:
+remove-model: remove-model-from-db
 ifneq (${MODEL},)
 	${MAKE} REMOVE_PATTERN='<TAB>${MODEL}<EOS>' remove-from-scores
 	${MAKE} REMOVE_PATTERN='${MODEL}<EOS>' remove-from-model-lists
@@ -175,7 +210,7 @@ endif
 
 
 .PHONY: remove-langpair-benchmark-from-model
-remove-langpair-benchmark-from-model:
+remove-langpair-benchmark-from-model: remove-langpair-benchmark-from-model-from-db
 	${MAKE} REMOVE_PATTERN='${LANGPAIR}<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} REMOVE_PATTERN='<TAB>${MODEL}<EOS>' remove-from-scores
 	${MAKE} REMOVE_PATTERN='${MODEL}<EOS>' remove-from-model-lists
@@ -184,7 +219,7 @@ remove-langpair-benchmark-from-model:
 	${MAKE} update-model-lists
 
 .PHONY: remove-benchmark-from-model
-remove-benchmark-from-model:
+remove-benchmark-from-model: remove-benchmark-from-model-from-db
 	${MAKE} REMOVE_PATTERN='<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} REMOVE_PATTERN='<TAB>${MODEL}<EOS>' remove-from-scores
 	${MAKE} REMOVE_PATTERN='${MODEL}<EOS>' remove-from-model-lists
@@ -193,7 +228,7 @@ remove-benchmark-from-model:
 	${MAKE} update-model-lists
 
 .PHONY: remove-langpair-benchmark
-remove-langpair-benchmark: ${SCORE_FILE_DIRS_REMOVE}
+remove-langpair-benchmark: remove-langpair-benchmark-from-db ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} REMOVE_PATTERN='${LANGPAIR}<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} remove-translation-files remove-eval-files
 	${MAKE} update-zip-files
@@ -201,7 +236,7 @@ remove-langpair-benchmark: ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} -C ${REPOHOME} scores/langpairs.txt scores/benchmarks.txt
 
 .PHONY: remove-benchmark
-remove-benchmark: ${SCORE_FILE_DIRS_REMOVE}
+remove-benchmark: remove-benchmark-from-db ${SCORE_FILE_DIRS_REMOVE}
 	${MAKE} REMOVE_PATTERN='<TAB>${BENCHMARK}<TAB>' remove-from-model-scores
 	${MAKE} remove-translation-files remove-eval-files
 	${MAKE} update-zip-files
