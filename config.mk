@@ -9,6 +9,12 @@ include ${MAKEDIR}env.mk
 include ${MAKEDIR}slurm.mk
 
 
+
+EXCLUDE_BENCHMARKS = flores101-devtest
+# tatoeba-test-v2020-07-28 tatoeba-test-v2021-03-30
+
+SPACE := $(empty) $(empty)
+
 ## LEADERBOARD specifies the leaderboard category
 ## (OPUS-MT-leaderboard, External-MT-leaderboard, Contributed-MT-leaderboard)
 
@@ -112,7 +118,7 @@ reverse = $(if $(wordlist 2,2,$(1)),$(call reverse,$(wordlist 2,$(words $(1)),$(
 ## MODEL_EVAL_URL: location of the storage space for the evaluation output files
 
 STORAGE_BUCKET  := ${LEADERBOARD}
-MODEL_STORAGE   := https://object.pouta.csc.fi/${STORAGE_BUCKET}
+MODEL_STORAGE   ?= https://object.pouta.csc.fi/${STORAGE_BUCKET}
 MODEL_EVAL_URL  := ${MODEL_STORAGE}/${MODEL}.eval.zip
 
 
@@ -234,7 +240,8 @@ ifeq ($(wildcard ${MODEL_TESTSETS}),)
 	$(shell mkdir -p $(dir ${MODEL_TESTSETS}) && \
 		grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 		cut -f2 | tr ' ' "\n" | \
-		sed 's|^|${lp}/|' >> ${MODEL_TESTSETS}))
+		sed 's|^|${lp}/|' | \
+		grep -v "/\($(subst ${SPACE},\|,${EXCLUDE_BENCHMARKS})\)$$" >> ${MODEL_TESTSETS}))
 endif
 endif
 

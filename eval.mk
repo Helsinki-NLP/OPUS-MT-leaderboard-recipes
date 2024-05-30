@@ -135,7 +135,8 @@ ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
 	@l=$(foreach lp,${LANGPAIRS},\
 		$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 			cut -f2 | tr ' ' "\n" | \
-			sed 's|^|${lp}/|' >> $@))
+			sed 's|^|${lp}/|' | \
+			grep -v "/\($(subst ${SPACE},\|,${EXCLUDE_BENCHMARKS})\)$$" >> $@))
 	@echo "available testsets stored in $@"
 #	-git add $@
 
