@@ -128,6 +128,7 @@ ${MISSING_BENCHMARKS}:
 
 .PHONY: get-available-benchmarks
 get-available-benchmarks: ${MODEL_TESTSETS}
+	echo $<
 
 ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
 	mkdir -p $(dir $@)
