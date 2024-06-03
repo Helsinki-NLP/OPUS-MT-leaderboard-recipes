@@ -177,9 +177,10 @@ ${EVAL_BENCHMARK_TARGETS}:
 
 ${TRANSLATED_BENCHMARK}: ${SYSTEM_OUTPUT}
 	@mkdir -p ${dir $@}
-	@if [ -s $< ]; then \
-	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
-	fi
+	@paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@
+#	@if [ -s $< ]; then \
+#	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
+#	fi
 
 .NOTINTERMEDIATE: %.output %.eval
 
@@ -502,3 +503,5 @@ endif
 endif
 endif
 endif
+	find ${MODEL_DIR} -name '*.output' -empty -delete
+	find ${MODEL_DIR} -name '*.eval' -empty -delete

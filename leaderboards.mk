@@ -158,7 +158,7 @@ release-history.txt: released-models.txt
 # #	@git add $@
 
 
-${MODEL_LIST}: models
+${MODEL_LIST}: models scores/bleu_scores.db
 	find models -name '*.info' \
 	| xargs grep parameters  \
 	| sed 's|^models/||;s/\.info:/:/' \
