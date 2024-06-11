@@ -128,6 +128,7 @@ ${MISSING_BENCHMARKS}:
 
 .PHONY: get-available-benchmarks
 get-available-benchmarks: ${MODEL_TESTSETS}
+	echo $<
 
 ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
 	mkdir -p $(dir $@)
@@ -135,7 +136,8 @@ ${MODEL_TESTSETS}: ${LANGPAIR_TO_TESTSETS}
 	@l=$(foreach lp,${LANGPAIRS},\
 		$(shell grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 			cut -f2 | tr ' ' "\n" | \
-			sed 's|^|${lp}/|' >> $@))
+			sed 's|^|${lp}/|' | \
+			grep -v "/\($(subst ${SPACE},\|,${EXCLUDE_BENCHMARKS})\)$$" >> $@))
 	@echo "available testsets stored in $@"
 #	-git add $@
 
@@ -175,9 +177,10 @@ ${EVAL_BENCHMARK_TARGETS}:
 
 ${TRANSLATED_BENCHMARK}: ${SYSTEM_OUTPUT}
 	@mkdir -p ${dir $@}
-	@if [ -s $< ]; then \
-	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
-	fi
+	@paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@
+#	@if [ -s $< ]; then \
+#	  paste -d "\n" ${TESTSET_SRC} ${TESTSET_TRG} $< | sed 'n;n;G;' > $@; \
+#	fi
 
 .NOTINTERMEDIATE: %.output %.eval
 
@@ -500,3 +503,5 @@ endif
 endif
 endif
 endif
+	find ${MODEL_DIR} -name '*.output' -empty -delete
+	find ${MODEL_DIR} -name '*.eval' -empty -delete

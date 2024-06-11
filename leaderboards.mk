@@ -127,21 +127,38 @@ scores/%/model-list.txt:
 	xargs cut -f2 | sed 's|https*://[^/]*/||' | sed 's|.zip$$||' | sort -u > $@
 #	@git add $@
 
-released-models.txt: scores
-	find scores -name 'bleu-scores.txt' | xargs cat | cut -f2 | sort -u > $@
-#	@git add $@
+released-models.txt: scores/bleu_scores.db
+	echo 'select distinct model from scores;' | sqlite3 $< | sort | grep . > $@
+
+
+## TODO: release dates for HPLT models are now hard-coded for v1.0
 
 release-history.txt: released-models.txt
-	cat $< | rev | cut -f3 -d'/' | rev > $@.pkg
-	cat $< | rev | cut -f2 -d'/' | rev > $@.langpair
-	cat $< | rev | cut -f1 -d'/' | rev > $@.model
-	cat $< | sed 's/^.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)\.zip$$/\1/' > $@.date
-	paste $@.date $@.pkg $@.langpair $@.model | sort -r | sed 's/\.zip$$//' > $@
+	cat $< | cut -f1 -d'/' > $@.pkg
+	cat $< | cut -f2 -d'/' > $@.langpair
+	cat $< | cut -f3 -d'/' > $@.model
+	cat $< | sed 's/^.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)$$/\1/' \
+	| sed 's/.*v1.0-hplt.*$$/2024-03-14/' > $@.date
+	paste $@.date $@.pkg $@.langpair $@.model | sort -r > $@
 	rm -f $@.langpair $@.model $@.date $@.pkg
 #	@git add $@
 
 
-${MODEL_LIST}: models
+# released-models.txt: scores/bleu_scores.db
+#	find scores -name 'bleu-scores.txt' | xargs cat | cut -f2 | sort -u > $@
+#	@git add $@
+
+# release-history.txt: released-models.txt
+# 	cat $< | rev | cut -f3 -d'/' | rev > $@.pkg
+# 	cat $< | rev | cut -f2 -d'/' | rev > $@.langpair
+# 	cat $< | rev | cut -f1 -d'/' | rev > $@.model
+# 	cat $< | sed 's/^.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)\.zip$$/\1/' > $@.date
+# 	paste $@.date $@.pkg $@.langpair $@.model | sort -r | sed 's/\.zip$$//' > $@
+# 	rm -f $@.langpair $@.model $@.date $@.pkg
+# #	@git add $@
+
+
+${MODEL_LIST}: models scores/bleu_scores.db
 	find models -name '*.info' \
 	| xargs grep parameters  \
 	| sed 's|^models/||;s/\.info:/:/' \
@@ -271,7 +288,6 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 
 
 
-
 %/langpairs.txt: %
 	find $(dir $@) -mindepth 1 -maxdepth 1 -type d | sed 's#${dir $@}/##' | sort > $@
 #	@git add $@
@@ -280,17 +296,27 @@ scores/${LANGPAIR}/%-scores.txt: scores/${LANGPAIR}
 #	find $(dir $@) -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort > $@
 
 
-scores/benchmarks.txt: scores
-	rm -f $@
-	find $< -mindepth 2 -maxdepth 2 -type d  | sort > $@.tmp
-	for b in `cut -f3 -d/ $@.tmp | sort -u`; do \
-	  echo "find language pairs for $$b"; \
-	  echo -n "$$b	" >> $@; \
-	  grep "/$$b$$" $@.tmp | cut -f2 -d/ | sort -u | tr "\n" ' ' >> $@; \
-	  echo "" >> $@; \
-	done
-	rm -f $@.tmp
-#	@git add $@
+scores/langpairs.txt: scores/bleu_scores.db
+	echo 'select distinct langpair from scores;' | sqlite3 $< | sort | grep . > $@
+
+
+scores/benchmarks.txt: scores/bleu_scores.db
+	echo 'select distinct testset,langpair from scores;' \
+	| sqlite3 $< | sort | grep . \
+	| ${MAKEDIR}/tools/merge-benchmark-langpairs.pl > $@
+
+
+# scores/benchmarks.txt: scores
+# 	rm -f $@
+# 	find $< -mindepth 2 -maxdepth 2 -type d  | sort > $@.tmp
+# 	for b in `cut -f3 -d/ $@.tmp | sort -u`; do \
+# 	  echo "find language pairs for $$b"; \
+# 	  echo -n "$$b	" >> $@; \
+# 	  grep "/$$b$$" $@.tmp | cut -f2 -d/ | sort -u | tr "\n" ' ' >> $@; \
+# 	  echo "" >> $@; \
+# 	done
+# 	rm -f $@.tmp
+# #	@git add $@
 
 ## this is too slow:
 ##

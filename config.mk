@@ -9,6 +9,12 @@ include ${MAKEDIR}env.mk
 include ${MAKEDIR}slurm.mk
 
 
+
+EXCLUDE_BENCHMARKS = flores101-devtest
+# tatoeba-test-v2020-07-28 tatoeba-test-v2021-03-30
+
+SPACE := $(empty) $(empty)
+
 ## LEADERBOARD specifies the leaderboard category
 ## (OPUS-MT-leaderboard, External-MT-leaderboard, Contributed-MT-leaderboard)
 
@@ -91,15 +97,18 @@ TESTSET_INDEX   := ${OPUSMT_TESTSETS}/index.txt
 
 SCORE_HOME       ?= ${REPOHOME}scores
 MODEL_HOME       ?= ${REPOHOME}models
-SCORE_DB         := ${REPOHOME}models.db
-SCORE_CSV        := ${REPOHOME}models.csv
 MODEL_DIR        := ${MODEL_HOME}/${MODEL}
 MODEL_EVALZIP    := ${MODEL_DIR}.zip
 MODEL_EVALLOGZIP := ${MODEL_DIR}.log.zip
 MODEL_EVALALLZIP := ${MODEL_DIR}.eval.zip
 MODEL_TESTSETS   := ${MODEL_DIR}.testsets.tsv
 
+
 LEADERBOARD_DIR = ${REPOHOME}scores
+
+SCORE_DB       := ${LEADERBOARD_DIR}/${METRIC}_scores.db
+SCORE_CSV      := ${LEADERBOARD_DIR}/${METRIC}_scores.csv
+SCORE_DBS      := $(foreach m,${METRICS},${LEADERBOARD_DIR}/${m}_scores.db)
 
 
 ## convenient function to reverse a list
@@ -109,7 +118,7 @@ reverse = $(if $(wordlist 2,2,$(1)),$(call reverse,$(wordlist 2,$(words $(1)),$(
 ## MODEL_EVAL_URL: location of the storage space for the evaluation output files
 
 STORAGE_BUCKET  := ${LEADERBOARD}
-MODEL_STORAGE   := https://object.pouta.csc.fi/${STORAGE_BUCKET}
+MODEL_STORAGE   ?= https://object.pouta.csc.fi/${STORAGE_BUCKET}
 MODEL_EVAL_URL  := ${MODEL_STORAGE}/${MODEL}.eval.zip
 
 
@@ -231,7 +240,8 @@ ifeq ($(wildcard ${MODEL_TESTSETS}),)
 	$(shell mkdir -p $(dir ${MODEL_TESTSETS}) && \
 		grep '^${lp}	' ${LANGPAIR_TO_TESTSETS} | \
 		cut -f2 | tr ' ' "\n" | \
-		sed 's|^|${lp}/|' >> ${MODEL_TESTSETS}))
+		sed 's|^|${lp}/|' | \
+		grep -v "/\($(subst ${SPACE},\|,${EXCLUDE_BENCHMARKS})\)$$" >> ${MODEL_TESTSETS}))
 endif
 endif
 
