@@ -139,7 +139,7 @@ release-history.txt: released-models.txt
 	cat $< | cut -f3 -d'/' > $@.model
 	cat $< | sed 's/^.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}\)$$/\1/' \
 	| sed 's/.*v1.0-hplt.*$$/2024-03-14/' > $@.date
-	paste $@.date $@.pkg $@.langpair $@.model | sort -r > $@
+	paste $@.date $@.pkg $@.langpair $@.model | sort -k1,1r -k3,3 > $@
 	rm -f $@.langpair $@.model $@.date $@.pkg
 #	@git add $@
 
