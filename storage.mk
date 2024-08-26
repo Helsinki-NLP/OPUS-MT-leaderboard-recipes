@@ -53,11 +53,11 @@ upload upload-eval-files:
 	which a-get
 	if [ `find .${MODEL_HOME} -size -5G -name '*.eval.zip' | wc -l` -gt 0 ]; then \
 	  cd .. && find models/${MODEL_HOME} -size -5G -name '*.eval.zip' | \
-		xargs swift upload ${STORAGE_BUCKET} --changed --skip-identical; \
+		xargs -n 500 swift upload ${STORAGE_BUCKET} --changed --skip-identical; \
 	fi
 	if [ `find .${MODEL_HOME} -size +5G -name '*.eval.zip' | wc -l` -gt 0 ]; then \
 	  cd .. && find models/${MODEL_HOME} -size +5G -name '*.eval.zip' | \
-		xargs swift upload ${STORAGE_BUCKET} --changed --skip-identical --use-slo --segment-size 5G; \
+		xargs -n 500 swift upload ${STORAGE_BUCKET} --changed --skip-identical --use-slo --segment-size 5G; \
 	fi
 	swift post ${STORAGE_BUCKET} --read-acl ".r:*"
 
@@ -68,11 +68,11 @@ upload-all:
 	which a-get
 	if [ `find . -size -5G -name '*.eval.zip' | wc -l` -gt 0 ]; then \
 	  cd .. && find models/ -size -5G -name '*.eval.zip' | \
-		xargs swift upload ${STORAGE_BUCKET} --changed --skip-identical; \
+		xargs -n 500 swift upload ${STORAGE_BUCKET} --changed --skip-identical; \
 	fi
 	if [ `find . -size +5G -name '*.eval.zip' | wc -l` -gt 0 ]; then \
 	  cd .. && find models/ -size +5G -name '*.eval.zip' | \
-		xargs swift upload ${STORAGE_BUCKET} --changed --skip-identical --use-slo --segment-size 5G; \
+		xargs -n 500 swift upload ${STORAGE_BUCKET} --changed --skip-identical --use-slo --segment-size 5G; \
 	fi
 	swift post ${STORAGE_BUCKET} --read-acl ".r:*"
 
