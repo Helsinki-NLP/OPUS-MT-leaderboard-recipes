@@ -56,11 +56,15 @@ ${MODEL_HOME}/%-scores.registered: ${MODEL_HOME}/%-scores.txt
 			PRIMARY KEY (model, langpair, testset) \
 		);" | sqlite3 $$d.db; \
 	  fi; \
-	  echo ".import --csv $@.csv scores" | sqlite3 $$d.db; \
+	  printf ".mode csv\n.import $@.csv scores" | sqlite3 $$d.db; \
 	  date +%F > $$d.date; )
 	rm -f $@.csv
 	touch $@
 
+
+## --csv flag only works on recent sqlite3 versions
+## 
+# echo ".import --csv $@.csv scores" | sqlite3 $$d.db; \
 
 
 
@@ -104,7 +108,7 @@ ${SCORE_DB}: ${SCORE_CSV}
 		PRIMARY KEY (model, langpair, testset) \
 		);" | sqlite3 $@; \
 	fi
-	echo ".import --csv $< scores" | sqlite3 $@
+	printf ".mode csv\n.import --csv $< scores" | sqlite3 $@
 	date +%F > ${@:.db=.date}
 
 ${SCORE_CSV}: ${MODEL_HOME}
