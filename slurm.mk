@@ -71,7 +71,7 @@ endif
 	echo 'cd $${SLURM_SUBMIT_DIR:-.}'       >> ${TMPWORKDIR}/$@
 	echo 'pwd'                              >> ${TMPWORKDIR}/$@
 	echo 'echo "Starting at `date`"'        >> ${TMPWORKDIR}/$@
-	echo '${MAKE} -j ${GPUJOB_HPC_JOBS} ${MAKEARGS} ${@:.submit=}' >> ${TMPWORKDIR}/$@
+	echo '${MAKE} -j ${GPUJOB_HPC_JOBS} SUBMIT_TYPE=submit ${MAKEARGS} ${@:.submit=}' >> ${TMPWORKDIR}/$@
 	echo 'echo "Finishing at `date`"'       >> ${TMPWORKDIR}/$@
 	echo 'seff $$SLURM_JOBID'               >> ${TMPWORKDIR}/$@
 	sbatch ${SBATCH_ARGS} ${TMPWORKDIR}/$@
@@ -126,7 +126,7 @@ endif
 	echo 'cd $${SLURM_SUBMIT_DIR:-.}' >> ${TMPWORKDIR}/$@
 	echo 'pwd' >> ${TMPWORKDIR}/$@
 	echo 'echo "Starting at `date`"'  >> ${TMPWORKDIR}/$@
-	echo '${MAKE} -j ${CPUJOB_HPC_JOBS} ${MAKEARGS} ${@:.submitcpu=}' >> ${TMPWORKDIR}/$@
+	echo '${MAKE} -j ${CPUJOB_HPC_JOBS} SUBMIT_TYPE=submitcpu ${MAKEARGS} ${@:.submitcpu=}' >> ${TMPWORKDIR}/$@
 	echo 'echo "Finishing at `date`"' >> ${TMPWORKDIR}/$@
 	echo 'seff $$SLURM_JOBID'         >> ${TMPWORKDIR}/$@
 	sbatch ${SBATCH_ARGS} ${TMPWORKDIR}/$@

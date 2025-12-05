@@ -50,6 +50,7 @@ EVAL_MODEL_TARGETS = $(patsubst %,%-evalmodel,${MODELS})
 
 SLURM_REPEAT     ?= 0
 SLURM_MAX_REPEAT ?= 10
+SUBMIT_TYPE      ?= submit
 
 # eval models - if this is a slurm job (i.e. SLURM_JOBID is set):
 # - submit another one that continues training in case the current one breaks
@@ -61,7 +62,7 @@ ifdef SLURM_JOBID
 	  echo "submit job that continues to train in case the current one breaks or times out"; \
 	  echo "current iteration: ${SLURM_REPEAT}"; \
 	  ${MAKE} SLURM_REPEAT=$$(( ${SLURM_REPEAT} + 1 )) \
-		SBATCH_ARGS="-d afternotok:${SLURM_JOBID}" $@.submit; \
+		SBATCH_ARGS="-d afternotok:${SLURM_JOBID}" $@.${SUBMIT_TYPE}; \
 	else \
 	  echo "reached maximum number of repeated slurm jobs: ${SLURM_REPEAT}"; \
 	fi
