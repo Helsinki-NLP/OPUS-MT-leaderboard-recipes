@@ -90,6 +90,8 @@ eval-model-files: ${MODEL_EVAL_SCORES}
 update-eval-files:
 	@if [ -d ${MODEL_DIR} ]; then \
 	  find ${MODEL_DIR} -name '*.bleu' -empty -delete; \
+	  find ${MODEL_DIR} -name '*.output' -empty -delete; \
+	  find ${MODEL_DIR} -name '*.eval' -empty -delete; \
 	  if [ -e ${MODEL_SCORES} ]; then \
 	    if [ `find ${MODEL_DIR} -name '*.bleu' | wc -l` -gt `cat ${MODEL_SCORES} | wc -l` ]; then \
 	      echo "move $(notdir ${MODEL_SCORES}) to $(notdir ${MODEL_SCORES}.${TODAY})"; \
